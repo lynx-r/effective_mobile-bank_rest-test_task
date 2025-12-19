@@ -1,0 +1,149 @@
+databaseChangeLog:
+  - changeSet:
+      id: insert-default-data
+      author: bankcards-app
+      changes:
+        # Создание тестового администратора
+        - insert:
+            tableName: users
+            columns:
+              - column:
+                  name: username
+                  value: admin
+              - column:
+                  name: email
+                  value: admin@bankcards.com
+              - column:
+                  name: password
+                  value: $2a$10$XqQRQ7X8YJ9YJ9YJ9YJ9YeOqQRQ7X8YJ9YJ9YJ9YJ9YJ9YJ9YJ9Y
+                  # Это хэш для пароля "admin123"
+              - column:
+                  name: first_name
+                  value: Admin
+              - column:
+                  name: last_name
+                  value: User
+              - column:
+                  name: enabled
+                  value: true
+
+        # Создание тестового пользователя
+        - insert:
+            tableName: users
+            columns:
+              - column:
+                  name: username
+                  value: user1
+              - column:
+                  name: email
+                  value: user1@example.com
+              - column:
+                  name: password
+                  value: $2a$10$XqQRQ7X8YJ9YJ9YJ9YJ9YeOqQRQ7X8YJ9YJ9YJ9YJ9YJ9YJ9YJ9Y
+                  # Это хэш для пароля "password123"
+              - column:
+                  name: first_name
+                  value: John
+              - column:
+                  name: last_name
+                  value: Doe
+              - column:
+                  name: enabled
+                  value: true
+
+        # # Назначение ролей пользователям
+        # - insert:
+        #     tableName: user_roles
+        #     columns:
+        #       - column:
+        #           name: user_id
+        #           value: 1  # admin user
+        #       - column:
+        #           name: role_id
+        #           value: 1  # ADMIN role
+
+        # - insert:
+        #     tableName: user_roles
+        #     columns:
+        #       - column:
+        #           name: user_id
+        #           value: 2  # regular user
+        #       - column:
+        #           name: role_id
+        #           value: 2  # USER role
+
+        # # Создание тестовых карт
+        # - insert:
+        #     tableName: cards
+        #     columns:
+        #       - column:
+        #           name: card_number_encrypted
+        #           value: "encrypted_4111111111111111"
+        #       - column:
+        #           name: card_number_masked
+        #           value: "**** **** **** 1111"
+        #       - column:
+        #           name: owner_name
+        #           value: "ADMIN USER"
+        #       - column:
+        #           name: expiry_date
+        #           value: "2025-12-31"
+        #       - column:
+        #           name: status
+        #           value: "ACTIVE"
+        #       - column:
+        #           name: balance
+        #           value: 10000.00
+        #       - column:
+        #           name: user_id
+        #           value: 1  # admin user
+
+        # - insert:
+        #     tableName: cards
+        #     columns:
+        #       - column:
+        #           name: card_number_encrypted
+        #           value: "encrypted_5555555555554444"
+        #       - column:
+        #           name: card_number_masked
+        #           value: "**** **** **** 4444"
+        #       - column:
+        #           name: owner_name
+        #           value: "JOHN DOE"
+        #       - column:
+        #           name: expiry_date
+        #           value: "2026-06-30"
+        #       - column:
+        #           name: status
+        #           value: "ACTIVE"
+        #       - column:
+        #           name: balance
+        #           value: 5000.00
+        #       - column:
+        #           name: user_id
+        #           value: 2  # regular user
+
+        # - insert:
+        #     tableName: cards
+        #     columns:
+        #       - column:
+        #           name: card_number_encrypted
+        #           value: "encrypted_378282246310005"
+        #       - column:
+        #           name: card_number_masked
+        #           value: "**** **** **** 0005"
+        #       - column:
+        #           name: owner_name
+        #           value: "JOHN DOE"
+        #       - column:
+        #           name: expiry_date
+        #           value: "2027-03-15"
+        #       - column:
+        #           name: status
+        #           value: "ACTIVE"
+        #       - column:
+        #           name: balance
+        #           value: 2500.75
+        #       - column:
+        #           name: user_id
+        #           value: 2  # regular user
