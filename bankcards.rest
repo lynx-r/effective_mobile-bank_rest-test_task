@@ -1,0 +1,44 @@
+@authorizationserver-api=http://localhost:9000
+@server-api=http://localhost:8080
+
+################################# Identity API #################################
+
+###
+# @name ApiRoot_Identity
+GET {{server-api}}
+###
+
+
+###
+# @name Login
+POST {{server-api}}/login/oauth2/code/oidc-client
+accept: application/json
+Content-Type: application/json
+# X-Requested-With: XMLHttpRequest
+
+{
+  "name": "user",
+  "password": "p"
+}
+###
+###
+
+# @name Greeting
+GET {{server-api}}/greeting
+accept: application/json
+Content-Type: application/json
+# X-Requested-With: XMLHttpRequest
+
+###
+
+# @name oauth2
+POST {{authorizationserver-api}}/oauth2/authenticate
+accept: application/json
+Content-Type: application/json
+# X-Requested-With: XMLHttpRequest
+
+{
+  "name": "user",
+  "password": "p"
+}
+###
