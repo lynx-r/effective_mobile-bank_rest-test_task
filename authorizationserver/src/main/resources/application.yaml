@@ -2,36 +2,17 @@
 spring:
   application:
     name: AuthorizationServer
-  security:
-    oauth2:
-      authorizationserver:
-        client:
-          oidc-client:
-            registration:
-              client-id: "oidc-client"
-              client-secret: "{noop}secret"
-              client-authentication-methods:
-                - "client_secret_jwt"
-              authorization-grant-types:
-                - "client_credentials"
-              redirect-uris:
-                - "http://127.0.0.1:8080/login/oauth2/code/oidc-client"
-              post-logout-redirect-uris:
-                - "http://127.0.0.1:8080/"
-              scopes:
-                - "admin.read"
-                - "user.read"
-            # require-authorization-consent: true
-            jwk-set-uri: http://localhost:9000/jwks
-            token-endpoint-authentication-signing-algorithm: RS256
-    user:
-      name: user
-      password: p
-      
+       
 server:
-  port: 9000
+  port: ${PORT:9000}
+  servlet:
+    session:
+      tracking-modes: cookie
 
 logging:
   level:
     "[com.example.authorizationserver]": DEBUG
-    # "[org.springframework.security]": DEBUG
+    "[org.springframework.security]": DEBUG
+
+app:
+  node-name: ${HOSTNAME:localhost.ru.test}  # Uses OS HOSTNAME env var, defaults to localhost

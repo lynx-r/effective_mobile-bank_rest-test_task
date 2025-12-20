@@ -23,17 +23,9 @@ spring:
     enabled: true
   security:
     oauth2:
-      client:
-        my-oauth-provider:
-          authorization-uri: ${OAUTH2_PROVIDER:http://localhost:9000}/oauth2/authorize
-          token-uri: ${OAUTH2_PROVIDER:http://localhost:9000}/oauth2/token
-          user-info-uri: ${OAUTH2_PROVIDER:http://localhost:9000}/userinfo
-          user-info-authentication-method: header
-          jwk-set-uri: ${OAUTH2_PROVIDER:http://localhost:9000}/oauth2/jwks
-          user-name-attribute: name
       resourceserver:
         jwt:
-          issuer-uri: ${OAUTH2_PROVIDER:http://localhost:9000}/issuer
+          issuer-uri: ${OAUTH2_PROVIDER:http://localhost:9000}
     user:
       name: user
       password: p
@@ -44,7 +36,7 @@ rsa:
   public-key: classpath:certs/public.pem
 
 server:
-  port: 8080
+  port: ${PORT:8080}
 
 logging:
   level:

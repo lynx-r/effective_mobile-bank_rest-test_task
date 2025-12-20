@@ -1,0 +1,37 @@
+@authorizationserver-api=http://localhost:9000
+@server-api=http://localhost:8080
+
+################################# Identity API #################################
+###
+
+# @name oauth2
+POST {{authorizationserver-api}}/oauth2/authorize?response_type=code&client_id=client&scope=openid&redirect_uri=http://localhost:8080/login/oauth2/code/client&code-challenge=ZDw_gch8wrrmYFVCbIJm6B0ouzcT64GlFonQJzIekRM&code-challenge-method=S256
+accept: application/json
+Content-Type: application/json
+# X-Requested-With: XMLHttpRequest
+
+{
+  "name": "user",
+  "password": "password"
+}
+###
+
+# @name oauth2
+POST {{authorizationserver-api}}/login
+accept: application/json
+Content-Type: application/json
+# X-Requested-With: XMLHttpRequest
+
+{
+  "name": "user",
+  "password": "password"
+}
+###
+
+GET {{authorizationserver-api}}/.well-known/openid-configuration
+accept: application/json
+Content-Type: application/json
+
+POST {{authorizationserver-api}}/oauth2/jwks
+accept: application/json
+Content-Type: application/json
