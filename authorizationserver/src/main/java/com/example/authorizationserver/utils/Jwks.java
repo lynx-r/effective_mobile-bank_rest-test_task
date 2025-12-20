@@ -8,9 +8,9 @@ import java.util.UUID;
 
 import com.nimbusds.jose.jwk.RSAKey;
 
-public final class JwksService {
+public final class Jwks {
 
-  private JwksService() {
+  private Jwks() {
   }
 
   public static RSAKey generateRsa() {

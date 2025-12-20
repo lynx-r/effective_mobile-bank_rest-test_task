@@ -5,6 +5,7 @@ import java.util.UUID;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.MediaType;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.oauth2.server.authorization.OAuth2AuthorizationServerConfigurer;
@@ -24,8 +25,10 @@ import org.springframework.security.oauth2.server.authorization.token.JwtEncodin
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
+import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
 
-import com.example.authorizationserver.utils.JwksService;
+import com.example.authorizationserver.utils.Jwks;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.JWKSource;
@@ -45,12 +48,18 @@ public class AppSecurityConfig {
         .oidc(Customizer.withDefaults());
 
     http
+
         .securityMatcher(authorizationServerConfigurer.getEndpointsMatcher())
         .authorizeHttpRequests(authorize -> authorize
             .anyRequest().authenticated())
         .csrf(csrf -> csrf
             .ignoringRequestMatchers(
                 authorizationServerConfigurer.getEndpointsMatcher()))
+        .exceptionHandling(exceptions -> exceptions
+            .defaultAuthenticationEntryPointFor(
+                new LoginUrlAuthenticationEntryPoint("/login"),
+                new MediaTypeRequestMatcher(MediaType.TEXT_HTML)))
+        .formLogin(Customizer.withDefaults())
         .apply(authorizationServerConfigurer);
 
     return http.build();
@@ -104,14 +113,15 @@ public class AppSecurityConfig {
   public RegisteredClientRepository registeredClientRepository() {
 
     var client = RegisteredClient.withId(UUID.randomUUID().toString())
-        .clientId("client")
-        .clientSecret("{noop}secret")
+        .clientId("bankcards")
+        // .clientSecret("secret")
         .clientName("PostmanClient")
-        .clientAuthenticationMethod(ClientAuthenticationMethod.NONE) // public client → PKCE
+        .clientAuthenticationMethod(ClientAuthenticationMethod.NONE)
         .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
         .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
         // .redirectUri("https://oauth.pstmn.io/v1/callback")
-        .redirectUri("http://localhost:8080/login/oauth2/code/client")
+        // .redirectUri("{baseUrl}/login/oauth2/code/{registrationId}")
+        .redirectUri("http://client-app:8080/login/oauth2/code/bankcards")
         .scope(OidcScopes.OPENID)
         .scope(OidcScopes.PROFILE)
         .scope(OidcScopes.EMAIL)
@@ -123,7 +133,7 @@ public class AppSecurityConfig {
 
   @Bean
   public JWKSource<SecurityContext> jwkSource() {
-    RSAKey rsaKey = JwksService.generateRsa();
+    RSAKey rsaKey = Jwks.generateRsa();
     JWKSet jwkSet = new JWKSet(rsaKey);
     return (jwkSelector, securityContext) -> jwkSelector.select(jwkSet);
   }

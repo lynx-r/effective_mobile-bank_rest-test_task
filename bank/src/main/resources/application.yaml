@@ -23,12 +23,27 @@ spring:
     enabled: true
   security:
     oauth2:
+      client:
+        registration:
+          bankcards:
+            client-id: bankcards
+            client-authentication-method: none
+            authorization-grant-type: authorization_code
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            scope: 
+              - openid
+              - profile
+              - email
+              - read
+        provider:
+          bankcards:
+            issuer-uri: ${OAUTH2_PROVIDER:http://auth-server:9000}
       resourceserver:
         jwt:
-          issuer-uri: ${OAUTH2_PROVIDER:http://localhost:9000}
-    user:
-      name: user
-      password: p
+          issuer-uri: ${OAUTH2_PROVIDER:http://auth-server:9000}
+    # user:
+      # name: user
+      # password: "{noop}password"
 
 #rsa keys
 rsa:
@@ -37,9 +52,17 @@ rsa:
 
 server:
   port: ${PORT:8080}
+  servlet:
+    session:
+      cookie:
+        name: BANK_CLIENT_SESSION
 
 logging:
   level:
     "[com.example.bankcards]": DEBUG
-    "[org.springframework.security]": DEBUG
+    "[org.springframework.security]": TRACE
     liquibase: DEBUG
+    "[org.springframework.web.client.RestTemplate]": DEBUG
+    "[org.apache.hc.client5.http]": DEBUG
+    "[org.springframework.security.oauth2.client]": DEBUG
+    "[org.springframework.security.web.authentication]": DEBUG

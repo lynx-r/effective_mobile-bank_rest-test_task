@@ -1,5 +1,5 @@
-@authorizationserver-api=http://localhost:9000
-@server-api=http://localhost:8080
+@authorizationserver-api=http://auth-server:9000
+@server-api=http://client-app:8080
 
 ################################# Identity API #################################
 
@@ -32,7 +32,7 @@ Content-Type: application/json
 ###
 
 # @name oauth2
-POST {{authorizationserver-api}}/oauth2/authorize?response_type=code&client_id=client&scope=openid&redirect_uri=http://localhost:8080/login/oauth2/code/client
+POST {{authorizationserver-api}}/oauth2/authorize?response_type=code&client_id=client&scope=openid&redirect_uri=http://client-app:8080/login/oauth2/code/client
 accept: application/json
 Content-Type: application/json
 # X-Requested-With: XMLHttpRequest

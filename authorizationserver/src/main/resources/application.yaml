@@ -2,17 +2,35 @@
 spring:
   application:
     name: AuthorizationServer
+  # security:
+    # oauth2:
+      # client:
+        # client-authentication-method: none
+  #       provider:
+  #         client:
+  #           issuer-uri: http://auth-server:9000
        
 server:
   port: ${PORT:9000}
   servlet:
     session:
       tracking-modes: cookie
+      cookie:
+        name: AUTH_SERVER_SESSIONID
 
 logging:
   level:
     "[com.example.authorizationserver]": DEBUG
     "[org.springframework.security]": DEBUG
-
-app:
-  node-name: ${HOSTNAME:localhost.ru.test}  # Uses OS HOSTNAME env var, defaults to localhost
+    
+    # Детальная работа сервера авторизации (токены, коды, проверки)
+    org.springframework.security.oauth2.server.authorization: TRACE
+    
+    # Работа с протоколом OAuth2 в целом
+    org.springframework.security.oauth2: DEBUG
+    
+    # Входящие HTTP запросы (увидите POST на /oauth2/token)
+    org.springframework.web: DEBUG
+    
+    # SQL-запросы (проверка, находится ли клиент 'bankcards' в базе)
+    org.hibernate.SQL: DEBUG
