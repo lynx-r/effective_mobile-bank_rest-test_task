@@ -1,25 +1,16 @@
 package com.example.authorizationserver;
 
-import java.util.UUID;
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.MediaType;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configurers.oauth2.server.authorization.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.oauth2.core.AuthorizationGrantType;
-import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
-import org.springframework.security.oauth2.core.oidc.OidcScopes;
 import org.springframework.security.oauth2.server.authorization.OAuth2TokenType;
-import org.springframework.security.oauth2.server.authorization.client.InMemoryRegisteredClientRepository;
-import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
-import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
 import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext;
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
@@ -42,26 +33,41 @@ public class AppSecurityConfig {
   public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http)
       throws Exception {
 
-    var authorizationServerConfigurer = new OAuth2AuthorizationServerConfigurer();
+    // var authorizationServerConfigurer = new
+    // OAuth2AuthorizationServerConfigurer();
 
-    authorizationServerConfigurer
-        .oidc(Customizer.withDefaults());
+    // authorizationServerConfigurer
+    // .oidc(Customizer.withDefaults());
+
+    // http
+
+    // .securityMatcher(authorizationServerConfigurer.getEndpointsMatcher())
+    // .authorizeHttpRequests(authorize -> authorize
+    // .anyRequest().authenticated())
+    // .csrf(csrf -> csrf
+    // .ignoringRequestMatchers(
+    // authorizationServerConfigurer.getEndpointsMatcher()))
+    // .exceptionHandling(exceptions -> exceptions
+    // .defaultAuthenticationEntryPointFor(
+    // new LoginUrlAuthenticationEntryPoint("/login"),
+    // new MediaTypeRequestMatcher(MediaType.TEXT_HTML)))
+    // .formLogin(Customizer.withDefaults())
+    // .apply(authorizationServerConfigurer);
 
     http
-
-        .securityMatcher(authorizationServerConfigurer.getEndpointsMatcher())
-        .authorizeHttpRequests(authorize -> authorize
+        .oauth2AuthorizationServer((authorizationServer) -> {
+          http.securityMatcher(authorizationServer.getEndpointsMatcher());
+          authorizationServer
+              .oidc(Customizer.withDefaults()); // Enable OpenID Connect 1.0
+        })
+        .authorizeHttpRequests((authorize) -> authorize
             .anyRequest().authenticated())
-        .csrf(csrf -> csrf
-            .ignoringRequestMatchers(
-                authorizationServerConfigurer.getEndpointsMatcher()))
-        .exceptionHandling(exceptions -> exceptions
+        // Redirect to the login page when not authenticated from the
+        // authorization endpoint
+        .exceptionHandling((exceptions) -> exceptions
             .defaultAuthenticationEntryPointFor(
                 new LoginUrlAuthenticationEntryPoint("/login"),
-                new MediaTypeRequestMatcher(MediaType.TEXT_HTML)))
-        .formLogin(Customizer.withDefaults())
-        .apply(authorizationServerConfigurer);
-
+                new MediaTypeRequestMatcher(MediaType.TEXT_HTML)));
     return http.build();
   }
 
@@ -82,7 +88,8 @@ public class AppSecurityConfig {
   public OAuth2TokenCustomizer<JwtEncodingContext> jwtCustomizer() {
     return context -> {
 
-      if (OAuth2TokenType.ACCESS_TOKEN.equals(context.getTokenType())) {
+      if (OAuth2TokenType.ACCESS_TOKEN.equals(context.getTokenType())
+          || "id_token".equals(context.getTokenType().getValue())) {
 
         var principal = context.getPrincipal();
 
@@ -94,7 +101,10 @@ public class AppSecurityConfig {
               .map(a -> a.substring(5)) // ROLE_ADMIN → ADMIN
               .toList();
 
-          context.getClaims().claim("roles", roles);
+          context.getClaims().claims((claims) -> {
+            claims.put("roles", roles);
+            claims.put("test_field", "server_works");
+          });
         }
       }
     };
@@ -107,28 +117,6 @@ public class AppSecurityConfig {
         .roles("USER", "ADMIN")
         .build();
     return new InMemoryUserDetailsManager(user);
-  }
-
-  @Bean
-  public RegisteredClientRepository registeredClientRepository() {
-
-    var client = RegisteredClient.withId(UUID.randomUUID().toString())
-        .clientId("bankcards")
-        // .clientSecret("secret")
-        .clientName("PostmanClient")
-        .clientAuthenticationMethod(ClientAuthenticationMethod.NONE)
-        .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
-        .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
-        // .redirectUri("https://oauth.pstmn.io/v1/callback")
-        // .redirectUri("{baseUrl}/login/oauth2/code/{registrationId}")
-        .redirectUri("http://client-app:8080/login/oauth2/code/bankcards")
-        .scope(OidcScopes.OPENID)
-        .scope(OidcScopes.PROFILE)
-        .scope(OidcScopes.EMAIL)
-        .scope("read")
-        .build();
-
-    return new InMemoryRegisteredClientRepository(client);
   }
 
   @Bean
