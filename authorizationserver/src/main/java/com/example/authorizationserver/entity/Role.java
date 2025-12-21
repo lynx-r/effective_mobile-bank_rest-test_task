@@ -1,4 +1,4 @@
-package com.example.bankcards.entity;
+package com.example.authorizationserver.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

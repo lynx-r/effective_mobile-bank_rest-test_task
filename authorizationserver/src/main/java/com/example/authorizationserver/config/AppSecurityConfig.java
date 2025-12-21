@@ -1,4 +1,4 @@
-package com.example.authorizationserver;
+package com.example.authorizationserver.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -7,14 +7,13 @@ import org.springframework.http.MediaType;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.server.authorization.OAuth2TokenType;
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
 import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext;
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
@@ -33,33 +32,13 @@ public class AppSecurityConfig {
   public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http)
       throws Exception {
 
-    // var authorizationServerConfigurer = new
-    // OAuth2AuthorizationServerConfigurer();
-
-    // authorizationServerConfigurer
-    // .oidc(Customizer.withDefaults());
-
-    // http
-
-    // .securityMatcher(authorizationServerConfigurer.getEndpointsMatcher())
-    // .authorizeHttpRequests(authorize -> authorize
-    // .anyRequest().authenticated())
-    // .csrf(csrf -> csrf
-    // .ignoringRequestMatchers(
-    // authorizationServerConfigurer.getEndpointsMatcher()))
-    // .exceptionHandling(exceptions -> exceptions
-    // .defaultAuthenticationEntryPointFor(
-    // new LoginUrlAuthenticationEntryPoint("/login"),
-    // new MediaTypeRequestMatcher(MediaType.TEXT_HTML)))
-    // .formLogin(Customizer.withDefaults())
-    // .apply(authorizationServerConfigurer);
-
     http
         .oauth2AuthorizationServer((authorizationServer) -> {
           http.securityMatcher(authorizationServer.getEndpointsMatcher());
           authorizationServer
               .oidc(Customizer.withDefaults()); // Enable OpenID Connect 1.0
         })
+        // настройте его)
         .authorizeHttpRequests((authorize) -> authorize
             .anyRequest().authenticated())
         // Redirect to the login page when not authenticated from the
@@ -77,7 +56,9 @@ public class AppSecurityConfig {
       throws Exception {
 
     http
+        .csrf(csrf -> csrf.ignoringRequestMatchers("/auth/register")) // Отключаем CSRF только для регистрации
         .authorizeHttpRequests(authorize -> authorize
+            .requestMatchers("/auth/register").permitAll() // Разрешаем доступ всем
             .anyRequest().authenticated())
         .formLogin(Customizer.withDefaults());
 
@@ -111,19 +92,15 @@ public class AppSecurityConfig {
   }
 
   @Bean
-  public UserDetailsService userDetailsService() {
-    UserDetails user = User.withUsername("user")
-        .password("{noop}password")
-        .roles("USER", "ADMIN")
-        .build();
-    return new InMemoryUserDetailsManager(user);
-  }
-
-  @Bean
   public JWKSource<SecurityContext> jwkSource() {
     RSAKey rsaKey = Jwks.generateRsa();
     JWKSet jwkSet = new JWKSet(rsaKey);
     return (jwkSelector, securityContext) -> jwkSelector.select(jwkSet);
+  }
+
+  @Bean
+  public PasswordEncoder passwordEncoder() {
+    return new BCryptPasswordEncoder();
   }
 
   @Bean

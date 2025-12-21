@@ -54,15 +54,14 @@ public class AppSecurityConfig {
     var rolesConverter = new JwtGrantedAuthoritiesConverter();
 
     rolesConverter.setAuthoritiesClaimName("roles"); // 👈 claim
-    rolesConverter.setAuthorityPrefix("ROLE_"); // 👈 префикс
+    // rolesConverter.setAuthorityPrefix("ROLE_"); // 👈 префикс
+    // 2. Указываем префикс ROLE_.
+    // Если в БД роли уже хранятся как "ROLE_USER", то здесь ставим пустую строку ""
+    // Если в БД просто "USER", то ставим "ROLE_"
+    rolesConverter.setAuthorityPrefix("");
 
     var converter = new JwtAuthenticationConverter();
-    converter.setJwtGrantedAuthoritiesConverter(jwt -> {
-      // Логируем весь токен или его части
-      System.out.println("JWT Token Value: " + jwt.getTokenValue());
-      System.out.println("JWT Claims: " + jwt.getClaims());
-      return rolesConverter.convert(jwt);
-    });
+    converter.setJwtGrantedAuthoritiesConverter(rolesConverter);
     return converter;
   }
 
