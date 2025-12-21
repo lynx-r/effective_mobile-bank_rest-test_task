@@ -35,7 +35,9 @@ public class CardholderServiceImpl implements CardholderService {
     // Здесь логика блокировки, например, установка флага enabled = false
     // Если это влияет на карты, можно заблокировать и их:
     cardholder.setEnabled(false);
-    cardholder.getCards().forEach(card -> card.setStatus(CardStatus.BLOCKED));
+    if (cardholder.getCards() != null) {
+      cardholder.getCards().forEach(card -> card.setStatus(CardStatus.BLOCKED));
+    }
     cardholderRepository.save(cardholder);
   }
 

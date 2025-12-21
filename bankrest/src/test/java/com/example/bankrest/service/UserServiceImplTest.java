@@ -1,6 +1,8 @@
 package com.example.bankrest.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
@@ -140,5 +142,227 @@ class UserServiceImplTest {
 
     assertEquals("User not found", exception.getMessage());
     verify(cardholderRepository).deleteById(1L);
+  }
+
+  // Enhanced Tests with Better Coverage
+
+  @Test
+  void shouldSuccessfullyBlockActiveUser() {
+    // Given
+    testCardholder1.setEnabled(true);
+    when(cardholderRepository.findById(1L)).thenReturn(Optional.of(testCardholder1));
+    when(cardholderRepository.save(any(Cardholder.class))).thenReturn(testCardholder1);
+
+    // When
+    userService.blockUser(1L);
+
+    // Then
+    verify(cardholderRepository).findById(1L);
+    verify(cardholderRepository).save(testCardholder1);
+    assertEquals(false, testCardholder1.getEnabled());
+  }
+
+  @Test
+  void shouldHandleBlockingAlreadyBlockedUser() {
+    // Given
+    testCardholder1.setEnabled(false);
+    when(cardholderRepository.findById(1L)).thenReturn(Optional.of(testCardholder1));
+    when(cardholderRepository.save(any(Cardholder.class))).thenReturn(testCardholder1);
+
+    // When
+    userService.blockUser(1L);
+
+    // Then
+    verify(cardholderRepository).findById(1L);
+    verify(cardholderRepository).save(testCardholder1);
+    assertEquals(false, testCardholder1.getEnabled());
+  }
+
+  @Test
+  void shouldHandleUserWithNullUsername() {
+    // Given
+    testCardholder1.setUsername(null);
+    when(cardholderRepository.findById(1L)).thenReturn(Optional.of(testCardholder1));
+    when(cardholderRepository.save(any(Cardholder.class))).thenReturn(testCardholder1);
+
+    // When
+    userService.blockUser(1L);
+
+    // Then
+    verify(cardholderRepository).findById(1L);
+    verify(cardholderRepository).save(testCardholder1);
+    assertNull(testCardholder1.getUsername());
+  }
+
+  @Test
+  void shouldHandleUserWithEmptyEmail() {
+    // Given
+    testCardholder1.setEmail("");
+    when(cardholderRepository.findById(1L)).thenReturn(Optional.of(testCardholder1));
+    when(cardholderRepository.save(any(Cardholder.class))).thenReturn(testCardholder1);
+
+    // When
+    userService.blockUser(1L);
+
+    // Then
+    verify(cardholderRepository).findById(1L);
+    verify(cardholderRepository).save(testCardholder1);
+    assertEquals("", testCardholder1.getEmail());
+  }
+
+  @Test
+  void shouldHandleUserWithVeryLongName() {
+    // Given
+    String longName = "Very Long Name That Exceeds Normal Length Limits For Testing Purposes";
+    testCardholder1.setFirstName(longName);
+    testCardholder1.setLastName(longName);
+    when(cardholderRepository.findById(1L)).thenReturn(Optional.of(testCardholder1));
+    when(cardholderRepository.save(any(Cardholder.class))).thenReturn(testCardholder1);
+
+    // When
+    userService.blockUser(1L);
+
+    // Then
+    verify(cardholderRepository).findById(1L);
+    verify(cardholderRepository).save(testCardholder1);
+    assertEquals(longName, testCardholder1.getFirstName());
+    assertEquals(longName, testCardholder1.getLastName());
+  }
+
+  @Test
+  void shouldHandleUserWithSpecialCharactersInName() {
+    // Given
+    testCardholder1.setFirstName("José María");
+    testCardholder1.setLastName("O'Connor-Smith");
+    when(cardholderRepository.findById(1L)).thenReturn(Optional.of(testCardholder1));
+    when(cardholderRepository.save(any(Cardholder.class))).thenReturn(testCardholder1);
+
+    // When
+    userService.blockUser(1L);
+
+    // Then
+    verify(cardholderRepository).findById(1L);
+    verify(cardholderRepository).save(testCardholder1);
+    assertEquals("José María", testCardholder1.getFirstName());
+    assertEquals("O'Connor-Smith", testCardholder1.getLastName());
+  }
+
+  @Test
+  void shouldHandleDatabaseConstraintViolationOnUserBlocking() {
+    // Given
+    when(cardholderRepository.findById(1L)).thenReturn(Optional.of(testCardholder1));
+    when(cardholderRepository.save(any(Cardholder.class)))
+        .thenThrow(new RuntimeException("Foreign key constraint violation"));
+
+    // When & Then
+    RuntimeException exception = assertThrows(RuntimeException.class,
+        () -> userService.blockUser(1L));
+
+    assertEquals("Foreign key constraint violation", exception.getMessage());
+    verify(cardholderRepository).findById(1L);
+    verify(cardholderRepository).save(any(Cardholder.class));
+  }
+
+  @Test
+  void shouldHandleRepositoryConnectionErrorOnFindAll() {
+    // Given
+    when(cardholderRepository.findAll()).thenThrow(new RuntimeException("Database connection failed"));
+
+    // When & Then
+    RuntimeException exception = assertThrows(RuntimeException.class,
+        () -> userService.findAllUsers());
+
+    assertEquals("Database connection failed", exception.getMessage());
+    verify(cardholderRepository).findAll();
+  }
+
+  @Test
+  void shouldHandleConcurrentDeletionDuringUserOperations() {
+    // Given
+    when(cardholderRepository.findById(1L)).thenReturn(Optional.empty());
+
+    // When & Then
+    EntityNotFoundException exception = assertThrows(EntityNotFoundException.class,
+        () -> userService.blockUser(1L));
+
+    assertEquals("Пользователь не найден", exception.getMessage());
+    verify(cardholderRepository).findById(1L);
+    verify(cardholderRepository, never()).save(any());
+  }
+
+  @Test
+  void shouldEfficientlyHandleLargeNumberOfUsers() {
+    // Given
+    List<Cardholder> largeUserList = new ArrayList<>();
+    for (int i = 0; i < 500; i++) {
+      Cardholder user = new Cardholder();
+      user.setId((long) i + 1);
+      user.setUsername("user" + i);
+      user.setEmail("user" + i + "@example.com");
+      user.setFirstName("First" + i);
+      user.setLastName("Last" + i);
+      user.setEnabled(true);
+      user.setCreatedAt(LocalDateTime.now());
+      largeUserList.add(user);
+    }
+    when(cardholderRepository.findAll()).thenReturn(largeUserList);
+
+    // When
+    List<CardholderResponse> result = userService.findAllUsers();
+
+    // Then
+    assertEquals(500, result.size());
+    verify(cardholderRepository).findAll();
+  }
+
+  @Test
+  void shouldPreserveUserDataDuringBlockingOperation() {
+    // Given
+    when(cardholderRepository.findById(1L)).thenReturn(Optional.of(testCardholder1));
+    when(cardholderRepository.save(any(Cardholder.class))).thenReturn(testCardholder1);
+
+    // When
+    userService.blockUser(1L);
+
+    // Then - verify all fields are preserved except enabled flag
+    assertEquals(Long.valueOf(1L), testCardholder1.getId());
+    assertEquals("user1", testCardholder1.getUsername());
+    assertEquals("user1@example.com", testCardholder1.getEmail());
+    assertEquals("John", testCardholder1.getFirstName());
+    assertEquals("Doe", testCardholder1.getLastName());
+    assertEquals(false, testCardholder1.getEnabled());
+    assertNotNull(testCardholder1.getCreatedAt());
+  }
+
+  @Test
+  void shouldValidateUserDataIntegrityDuringFindAll() {
+    // Given
+    List<Cardholder> users = List.of(testCardholder1, testCardholder2);
+    when(cardholderRepository.findAll()).thenReturn(users);
+
+    // When
+    List<CardholderResponse> result = userService.findAllUsers();
+
+    // Then
+    assertNotNull(result);
+    assertEquals(2, result.size());
+
+    // Verify first user
+    CardholderResponse firstUser = result.get(0);
+    assertNotNull(firstUser.id());
+    assertNotNull(firstUser.username());
+    assertNotNull(firstUser.firstName());
+    assertNotNull(firstUser.lastName());
+    assertNotNull(firstUser.enabled());
+
+    // Verify second user
+    CardholderResponse secondUser = result.get(1);
+    assertNotNull(secondUser.id());
+    assertNotNull(secondUser.username());
+    assertNotNull(secondUser.firstName());
+    assertNotNull(secondUser.lastName());
+    assertNotNull(secondUser.enabled());
+
+    verify(cardholderRepository).findAll();
   }
 }
