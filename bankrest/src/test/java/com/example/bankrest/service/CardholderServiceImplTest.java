@@ -30,7 +30,7 @@ import com.example.bankrest.repository.CardholderRepository;
 import jakarta.persistence.EntityNotFoundException;
 
 @ExtendWith(MockitoExtension.class)
-class UserServiceImplTest {
+class CardholderServiceImplTest {
 
   @Mock
   private CardholderRepository cardholderRepository;
