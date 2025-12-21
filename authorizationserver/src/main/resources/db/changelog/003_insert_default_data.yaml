@@ -1,6 +1,6 @@
 databaseChangeLog:
   - changeSet:
-      id: insert-default-data
+      id: insert-default-authorization-data
       author: bankcards-app
       changes:
         # Создание тестового администратора

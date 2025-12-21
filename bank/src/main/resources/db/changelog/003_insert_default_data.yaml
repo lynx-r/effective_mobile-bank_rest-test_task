@@ -1,11 +1,11 @@
 databaseChangeLog:
   - changeSet:
-      id: insert-default-data
+      id: insert-default-bank-data
       author: bankcards-app
       changes:
         # Создание тестового администратора
         - insert:
-            tableName: users
+            tableName: profiles
             columns:
               - column:
                   name: username
@@ -14,22 +14,15 @@ databaseChangeLog:
                   name: email
                   value: admin@bankcards.com
               - column:
-                  name: password
-                  value: $2a$10$XqQRQ7X8YJ9YJ9YJ9YJ9YeOqQRQ7X8YJ9YJ9YJ9YJ9YJ9YJ9YJ9Y
-                  # Это хэш для пароля "admin123"
-              - column:
                   name: first_name
                   value: Admin
               - column:
                   name: last_name
                   value: User
-              - column:
-                  name: enabled
-                  value: true
 
         # Создание тестового пользователя
         - insert:
-            tableName: users
+            tableName: profiles
             columns:
               - column:
                   name: username
@@ -38,39 +31,11 @@ databaseChangeLog:
                   name: email
                   value: user1@example.com
               - column:
-                  name: password
-                  value: $2a$10$XqQRQ7X8YJ9YJ9YJ9YJ9YeOqQRQ7X8YJ9YJ9YJ9YJ9YJ9YJ9YJ9Y
-                  # Это хэш для пароля "password123"
-              - column:
                   name: first_name
                   value: John
               - column:
                   name: last_name
                   value: Doe
-              - column:
-                  name: enabled
-                  value: true
-
-        # # Назначение ролей пользователям
-        - insert:
-            tableName: user_roles
-            columns:
-              - column:
-                  name: user_id
-                  value: 1  # admin user
-              - column:
-                  name: role_id
-                  value: 1  # ADMIN role
-
-        - insert:
-            tableName: user_roles
-            columns:
-              - column:
-                  name: user_id
-                  value: 2  # regular user
-              - column:
-                  name: role_id
-                  value: 2  # USER role
 
         # Создание тестовых карт
         - insert:

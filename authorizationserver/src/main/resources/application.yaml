@@ -41,7 +41,16 @@ spring:
                 - "email"
                 - "read"
             # require-authorization-consent: true
-       
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer      
+  docker:
+    compose:
+      file: ../compose.yaml 
+      enabled: true
+
 server:
   port: ${PORT:9000}
   servlet:

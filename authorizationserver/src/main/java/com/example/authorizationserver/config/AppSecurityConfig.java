@@ -1,9 +1,11 @@
 package com.example.authorizationserver.config;
 
+import org.apache.kafka.clients.admin.NewTopic;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.MediaType;
+import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.GrantedAuthority;
@@ -29,7 +31,7 @@ public class AppSecurityConfig {
 
   @Bean
   @Order(1)
-  public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http)
+  SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http)
       throws Exception {
 
     http
@@ -52,7 +54,7 @@ public class AppSecurityConfig {
 
   @Bean
   @Order(2)
-  public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http)
+  SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http)
       throws Exception {
 
     http
@@ -66,7 +68,7 @@ public class AppSecurityConfig {
   }
 
   @Bean
-  public OAuth2TokenCustomizer<JwtEncodingContext> jwtCustomizer() {
+  OAuth2TokenCustomizer<JwtEncodingContext> jwtCustomizer() {
     return context -> {
 
       if (OAuth2TokenType.ACCESS_TOKEN.equals(context.getTokenType())
@@ -92,19 +94,27 @@ public class AppSecurityConfig {
   }
 
   @Bean
-  public JWKSource<SecurityContext> jwkSource() {
+  JWKSource<SecurityContext> jwkSource() {
     RSAKey rsaKey = Jwks.generateRsa();
     JWKSet jwkSet = new JWKSet(rsaKey);
     return (jwkSelector, securityContext) -> jwkSelector.select(jwkSet);
   }
 
   @Bean
-  public PasswordEncoder passwordEncoder() {
+  PasswordEncoder passwordEncoder() {
     return new BCryptPasswordEncoder();
   }
 
   @Bean
-  public AuthorizationServerSettings authorizationServerSettings() {
+  AuthorizationServerSettings authorizationServerSettings() {
     return AuthorizationServerSettings.builder().build();
+  }
+
+  @Bean
+  NewTopic userRegistrationTopic() {
+    return TopicBuilder.name("user-registration-topic")
+        .partitions(1)
+        .replicas(1)
+        .build();
   }
 }

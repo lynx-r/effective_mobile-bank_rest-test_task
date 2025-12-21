@@ -41,10 +41,13 @@ spring:
       resourceserver:
         jwt:
           issuer-uri: ${OAUTH2_PROVIDER:http://auth-server:9000}
-    # user:
-      # name: user
-      # password: "{noop}password"
-
+  kafka:
+    consumer:
+      group-id: bankcards-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        "[spring.json.trusted.packages]": "com.example.common.*" # укажите ваш пакет с DTO
 
 server:
   port: ${PORT:8080}
