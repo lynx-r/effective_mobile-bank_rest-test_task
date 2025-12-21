@@ -5,7 +5,7 @@ databaseChangeLog:
       changes:
         # Создание тестового администратора
         - insert:
-            tableName: profiles
+            tableName: cardholders
             columns:
               - column:
                   name: username
@@ -22,7 +22,7 @@ databaseChangeLog:
 
         # Создание тестового пользователя
         - insert:
-            tableName: profiles
+            tableName: cardholders
             columns:
               - column:
                   name: username
@@ -60,7 +60,7 @@ databaseChangeLog:
                   name: balance
                   value: 10000.00
               - column:
-                  name: user_id
+                  name: cardholder_id
                   value: 1  # admin user
 
         - insert:
@@ -85,7 +85,7 @@ databaseChangeLog:
                   name: balance
                   value: 5000.00
               - column:
-                  name: user_id
+                  name: cardholder_id
                   value: 2  # regular user
 
         - insert:
@@ -110,5 +110,5 @@ databaseChangeLog:
                   name: balance
                   value: 2500.75
               - column:
-                  name: user_id
+                  name: cardholder_id
                   value: 2  # regular user

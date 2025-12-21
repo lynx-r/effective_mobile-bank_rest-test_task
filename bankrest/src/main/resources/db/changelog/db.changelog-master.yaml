@@ -1,7 +1,7 @@
 
 databaseChangeLog:
   - include:
-      file: 001_create_profiles_table.yaml
+      file: 001_create_cardholders_table.yaml
       relativeToChangelogFile: true
   - include:
       file: 002_create_cards_table.yaml

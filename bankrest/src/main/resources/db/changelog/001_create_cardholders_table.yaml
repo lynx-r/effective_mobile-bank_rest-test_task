@@ -1,10 +1,10 @@
 databaseChangeLog:
   - changeSet:
-      id: create-profiles-table
+      id: create-cardholders-table
       author: bankcards-app
       changes:
         - createTable:
-            tableName: profiles
+            tableName: cardholders
             columns:
               - column:
                   name: id
