@@ -1,4 +1,4 @@
-package com.example.bankcards.controller;
+package com.example.bankrest.controller;
 
 import java.util.Map;
 

@@ -1,10 +1,10 @@
-package com.example.bankcards.repository;
+package com.example.bankrest.repository;
 
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.example.bankcards.entity.User;
+import com.example.bankrest.entity.User;
 
 public interface UserRepository extends JpaRepository<User, Long> {
   Optional<User> findByEmail(String email);

@@ -1,4 +1,4 @@
-package com.example.bankcards.listener;
+package com.example.bankrest.listener;
 
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;

@@ -1,4 +1,4 @@
-package com.example.bankcards.entity;
+package com.example.bankrest.entity;
 
 import java.time.LocalDateTime;
 

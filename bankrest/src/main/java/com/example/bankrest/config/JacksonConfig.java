@@ -1,4 +1,4 @@
-package com.example.authorizationserver.config;
+package com.example.bankrest.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
