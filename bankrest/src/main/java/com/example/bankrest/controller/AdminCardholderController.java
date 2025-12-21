@@ -11,21 +11,21 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.bankrest.dto.UserResponse;
-import com.example.bankrest.service.UserService;
+import com.example.bankrest.dto.CardholderResponse;
+import com.example.bankrest.service.CardholderService;
 
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/admin/users")
+@RequestMapping("/api/admin/cardholders")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('ADMIN')")
-public class AdminUserController {
+public class AdminCardholderController {
 
-  private final UserService userService;
+  private final CardholderService userService;
 
   @GetMapping
-  public ResponseEntity<List<UserResponse>> getAllUsers() {
+  public ResponseEntity<List<CardholderResponse>> getAllUsers() {
     return ResponseEntity.ok(userService.findAllUsers());
   }
 

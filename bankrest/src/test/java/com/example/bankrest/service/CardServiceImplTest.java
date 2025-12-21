@@ -102,8 +102,8 @@ class CardServiceImplTest {
     assertEquals(CardStatus.ACTIVE, result.get(1).status());
     assertEquals(BigDecimal.valueOf(1000.50), result.get(0).balance());
     assertEquals(BigDecimal.valueOf(2500.00), result.get(1).balance());
-    assertEquals(1L, result.get(0).userId());
-    assertEquals(1L, result.get(1).userId());
+    assertEquals(1L, result.get(0).cardholderId());
+    assertEquals(1L, result.get(1).cardholderId());
     verify(cardRepository).findAll();
   }
 
@@ -135,7 +135,7 @@ class CardServiceImplTest {
     assertEquals("**** **** **** 1234", result.cardNumberMasked());
     assertEquals(CardStatus.ACTIVE, result.status());
     assertEquals(BigDecimal.valueOf(1000.50), result.balance());
-    assertEquals(1L, result.userId());
+    assertEquals(1L, result.cardholderId());
 
     verify(cardholderRepository).findById(1L);
     verify(cardRepository).save(any(Card.class));

@@ -35,6 +35,9 @@ public class Cardholder {
   @Column(name = "last_name")
   private String lastName;
 
+  @Column(name = "enabled")
+  private Boolean enabled = true;
+
   @Column(name = "created_at", nullable = false, updatable = false)
   private LocalDateTime createdAt;
 

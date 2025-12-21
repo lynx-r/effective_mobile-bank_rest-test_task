@@ -31,6 +31,7 @@ public class AppSecurityConfig {
       throws Exception {
 
     http
+        .csrf(csrf -> csrf.disable())
         .authorizeHttpRequests(authorize -> authorize
             .requestMatchers("/public/**").permitAll()
             .anyRequest().authenticated())

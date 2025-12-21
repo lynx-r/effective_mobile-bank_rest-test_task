@@ -21,7 +21,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.example.bankrest.dto.UserResponse;
+import com.example.bankrest.dto.CardholderResponse;
 import com.example.bankrest.entity.Cardholder;
 import com.example.bankrest.repository.CardholderRepository;
 
@@ -34,7 +34,7 @@ class UserServiceImplTest {
   private CardholderRepository cardholderRepository;
 
   @InjectMocks
-  private UserServiceImpl userService;
+  private CardholderServiceImpl userService;
 
   private Cardholder testCardholder1;
   private Cardholder testCardholder2;
@@ -65,14 +65,14 @@ class UserServiceImplTest {
     when(cardholderRepository.findAll()).thenReturn(cardholders);
 
     // When
-    List<UserResponse> result = userService.findAllUsers();
+    List<CardholderResponse> result = userService.findAllUsers();
 
     // Then
     assertEquals(2, result.size());
     assertEquals("user1", result.get(0).username());
     assertEquals("user2", result.get(1).username());
-    assertEquals(true, result.get(0).active());
-    assertEquals(true, result.get(1).active());
+    assertEquals(true, result.get(0).enabled());
+    assertEquals(true, result.get(1).enabled());
     verify(cardholderRepository).findAll();
   }
 
@@ -82,7 +82,7 @@ class UserServiceImplTest {
     when(cardholderRepository.findAll()).thenReturn(new ArrayList<>());
 
     // When
-    List<UserResponse> result = userService.findAllUsers();
+    List<CardholderResponse> result = userService.findAllUsers();
 
     // Then
     assertEquals(0, result.size());

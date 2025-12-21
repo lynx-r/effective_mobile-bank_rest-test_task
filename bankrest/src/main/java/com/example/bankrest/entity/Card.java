@@ -78,8 +78,4 @@ public class Card {
 
   @OneToMany(mappedBy = "toCard")
   private List<Transaction> incomingTransactions;
-
-  public static String createOwnerName(Cardholder cardholder) {
-    return cardholder.getFirstName() + " " + cardholder.getLastName();
-  }
 }

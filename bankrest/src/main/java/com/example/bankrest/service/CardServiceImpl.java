@@ -3,7 +3,6 @@ package com.example.bankrest.service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,6 +14,8 @@ import com.example.bankrest.entity.CardStatus;
 import com.example.bankrest.entity.Cardholder;
 import com.example.bankrest.repository.CardRepository;
 import com.example.bankrest.repository.CardholderRepository;
+import com.example.bankrest.util.CardCryptoUtil;
+import com.example.bankrest.util.CardUtils;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -24,8 +25,12 @@ import lombok.RequiredArgsConstructor;
 @Transactional
 public class CardServiceImpl implements CardService {
 
+  // TODO: брать из конфига
+  private static final String BIN = "444455";
+
   private final CardRepository cardRepository;
   private final CardholderRepository cardholderRepository;
+  private final CardCryptoUtil cardCryptoUtil;
 
   @Override
   @Transactional(readOnly = true)
@@ -37,14 +42,15 @@ public class CardServiceImpl implements CardService {
 
   @Override
   public CardResponse createCard(CreateCardRequest request) {
-    Cardholder owner = cardholderRepository.findById(request.userId())
+    Cardholder owner = cardholderRepository.findById(request.cardholderId())
         .orElseThrow(() -> new EntityNotFoundException("Пользователь не найден"));
+    String rawCardNumber = CardUtils.generateCardNumber(BIN);
 
     Card card = Card.builder()
         .cardholder(owner)
-        .ownerName(request.ownerName())
-        .cardNumberEncrypted("encrypted_val_" + UUID.randomUUID()) // Здесь логика шифрования
-        .cardNumberMasked("4444 **** **** 1111") // Здесь логика маскирования
+        .ownerName(CardUtils.createOwnerName(owner))
+        .cardNumberMasked(cardCryptoUtil.maskCardNumber(rawCardNumber))
+        .cardNumberEncrypted(cardCryptoUtil.encrypt(rawCardNumber))
         .expiryDate(LocalDate.now().plusYears(4))
         .balance(BigDecimal.ZERO)
         .status(CardStatus.ACTIVE)

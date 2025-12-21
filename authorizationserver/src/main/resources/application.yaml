@@ -50,7 +50,9 @@ spring:
     compose:
       file: ../compose.yaml 
       enabled: true
-
+      readiness:
+        wait: always # Ожидать готовности контейнеров перед запуском приложения
+        timeout: 2m
 server:
   port: ${PORT:9000}
   servlet:
