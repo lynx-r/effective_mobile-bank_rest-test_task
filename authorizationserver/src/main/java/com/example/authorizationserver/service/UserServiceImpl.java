@@ -6,18 +6,21 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.example.authorizationserver.dto.RegisterRequest;
 import com.example.authorizationserver.entity.User;
+import com.example.authorizationserver.exception.UserAlreadyExistsException;
 import com.example.authorizationserver.repository.RoleRepository;
 import com.example.authorizationserver.repository.UserRepository;
-import com.example.authorizationserver.request.RegisterRequest;
 import com.example.common.auth.event.UserCreatedEvent;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserServiceImpl implements UserService {
 
   private final UserRepository userRepository;
@@ -28,7 +31,7 @@ public class UserServiceImpl implements UserService {
   @Transactional
   public void register(RegisterRequest request) {
     if (userRepository.findByUsername(request.username()).isPresent()) {
-      throw new EntityNotFoundException("Пользователь уже существует");
+      throw new UserAlreadyExistsException("Пользователь уже существует");
     }
 
     var user = new User();
@@ -47,9 +50,9 @@ public class UserServiceImpl implements UserService {
 
     var event = new UserCreatedEvent(
         user.getUsername(),
-        "example@mail.com", // если есть email
+        user.getEmail(),
         LocalDateTime.now());
     kafkaTemplate.send("user-registration-topic", event);
-    System.out.println("Sent to Kafka: " + event);
+    log.info("User registration event sent to Kafka: username={}", user.getUsername());
   }
 }

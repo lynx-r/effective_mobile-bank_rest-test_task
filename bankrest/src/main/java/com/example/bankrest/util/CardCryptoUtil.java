@@ -7,17 +7,18 @@ import javax.crypto.spec.SecretKeySpec;
 
 import org.springframework.stereotype.Component;
 
-@Component
-public class CardCryptoUtil {
-  // В реальном проекте ключ должен быть в Vault или переменной окружения!
-  private static final String ALGORITHM = "AES";
-  // TODO: брать из конфига
-  private static final String KEY = "12345678123456781234567812345678"; // 32 байта для AES-256
-  private static final int CARD_LENGTH = 12;
+import com.example.bankrest.config.CryptoConfig;
 
-  /**
-   * Маскирование номера карты (оставляет первые 4 и последние 4 цифры)
-   */
+import lombok.RequiredArgsConstructor;
+
+@Component
+@RequiredArgsConstructor
+public class CardCryptoUtil {
+  private static final String ALGORITHM = "AES";
+  private static final int CARD_LENGTH = 16;
+
+  private final CryptoConfig cryptoConfig;
+
   public String maskCardNumber(String cardNumber) {
     if (cardNumber == null || cardNumber.length() < CardCryptoUtil.CARD_LENGTH) {
       return "**** **** **** ****";
@@ -25,12 +26,10 @@ public class CardCryptoUtil {
     return "**** **** **** " + cardNumber.substring(cardNumber.length() - 4);
   }
 
-  /**
-   * Шифрование номера карты (AES-256)
-   */
   public String encrypt(String data) {
     try {
-      SecretKeySpec secretKey = new SecretKeySpec(KEY.getBytes(), ALGORITHM);
+      String key = cryptoConfig.getEncryptionKey();
+      SecretKeySpec secretKey = new SecretKeySpec(key.getBytes(), ALGORITHM);
       Cipher cipher = Cipher.getInstance(ALGORITHM);
       cipher.init(Cipher.ENCRYPT_MODE, secretKey);
       byte[] encryptedBytes = cipher.doFinal(data.getBytes());
@@ -45,7 +44,8 @@ public class CardCryptoUtil {
    */
   public String decrypt(String encryptedData) {
     try {
-      SecretKeySpec secretKey = new SecretKeySpec(KEY.getBytes(), ALGORITHM);
+      String key = cryptoConfig.getEncryptionKey();
+      SecretKeySpec secretKey = new SecretKeySpec(key.getBytes(), ALGORITHM);
       Cipher cipher = Cipher.getInstance(ALGORITHM);
       cipher.init(Cipher.DECRYPT_MODE, secretKey);
       byte[] decodedBytes = Base64.getDecoder().decode(encryptedData);

@@ -15,7 +15,6 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class CardholderServiceImpl implements CardholderService {
 
   private final CardholderRepository cardholderRepository;
@@ -29,21 +28,22 @@ public class CardholderServiceImpl implements CardholderService {
   }
 
   @Override
+  @Transactional
   public void blockUser(Long id) {
     Cardholder cardholder = cardholderRepository.findById(id)
         .orElseThrow(() -> new EntityNotFoundException("Пользователь не найден"));
-    // Здесь логика блокировки, например, установка флага enabled = false
-    // Если это влияет на карты, можно заблокировать и их:
     cardholder.setEnabled(false);
-    if (cardholder.getCards() != null) {
+    if (cardholder.getCards() != null && !cardholder.getCards().isEmpty()) {
       cardholder.getCards().forEach(card -> card.setStatus(CardStatus.BLOCKED));
     }
-    cardholderRepository.save(cardholder);
   }
 
   @Override
+  @Transactional
   public void deleteUser(Long id) {
-    // Благодаря onDelete: CASCADE в Liquibase, карты удалятся автоматически в БД
+    if (!cardholderRepository.existsById(id)) {
+      throw new EntityNotFoundException("Пользователь не найден");
+    }
     cardholderRepository.deleteById(id);
   }
 }

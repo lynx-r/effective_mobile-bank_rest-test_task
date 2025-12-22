@@ -1,6 +1,7 @@
 package com.example.bankrest.entity;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import jakarta.persistence.CascadeType;
@@ -11,6 +12,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import lombok.Builder;
 import lombok.Data;
 
 @Table(name = "cardholders")
@@ -44,16 +46,22 @@ public class Cardholder {
   @Column(name = "updated_at", nullable = true)
   private LocalDateTime updatedAt;
 
-  // По желанию: двусторонняя связь
+  @Builder.Default
   @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
-  private List<Card> cards;
+  private List<Card> cards = new ArrayList<>();
 
   public void addCard(Card card) {
+    if (cards == null) {
+      cards = new ArrayList<>();
+    }
     cards.add(card);
     card.setOwner(this);
   }
 
   public String getCardOwnerName() {
-    return this.getFirstName().toUpperCase() + " " + this.getLastName().toUpperCase();
+    if (getFirstName() == null || getLastName() == null) {
+      return "";
+    }
+    return getFirstName().toUpperCase() + " " + getLastName().toUpperCase();
   }
 }

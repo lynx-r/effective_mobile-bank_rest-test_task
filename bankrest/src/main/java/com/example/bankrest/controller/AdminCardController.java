@@ -20,6 +20,7 @@ import com.example.bankrest.dto.CreateCardRequest;
 import com.example.bankrest.entity.CardStatus;
 import com.example.bankrest.service.CardService;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -36,7 +37,7 @@ public class AdminCardController {
   }
 
   @PostMapping
-  public ResponseEntity<CardResponse> createCard(@RequestBody CreateCardRequest request) {
+  public ResponseEntity<CardResponse> createCard(@Valid @RequestBody CreateCardRequest request) {
     return ResponseEntity.status(HttpStatus.CREATED).body(cardService.createCard(request));
   }
 

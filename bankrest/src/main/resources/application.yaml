@@ -60,6 +60,12 @@ server:
       cookie:
         name: BANK_CLIENT_SESSION
 
+bank:
+  card:
+    bin: ${CARD_BIN:444455}
+  crypto:
+    encryption-key: ${CRYPTO_KEY:12345678123456781234567812345678}
+
 logging:
   level:
     "[com.example.bankrest]": DEBUG

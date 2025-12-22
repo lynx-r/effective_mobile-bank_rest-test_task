@@ -23,13 +23,14 @@ import com.example.bankrest.dto.InternalTransferRequest;
 import com.example.bankrest.service.CardService;
 import com.example.bankrest.service.TransactionService;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/user")
+@RequestMapping("/api/cardholder")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('USER')")
-public class UserCardController {
+public class CardholderCardController {
 
   private final CardService cardService;
   private final TransactionService transactionService;
@@ -53,9 +54,9 @@ public class UserCardController {
   // 3. Перевод между своими картами
   @PostMapping("/transfer")
   public ResponseEntity<Void> transfer(@AuthenticationPrincipal OidcUser principal,
-      @RequestBody InternalTransferRequest request) {
+      @Valid @RequestBody InternalTransferRequest request) {
     transactionService.transferBetweenOwnCards(principal.getName(), request);
-    return ResponseEntity.ok().build();
+    return ResponseEntity.noContent().build();
   }
 
   // 4. Просмотр баланса конкретной карты

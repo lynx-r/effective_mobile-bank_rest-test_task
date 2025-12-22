@@ -12,6 +12,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.bankrest.config.CardConfig;
 import com.example.bankrest.dto.CardResponse;
 import com.example.bankrest.dto.CreateCardRequest;
 import com.example.bankrest.entity.Card;
@@ -27,15 +28,12 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class CardServiceImpl implements CardService {
-
-  // TODO: брать из конфига
-  private static final String BIN = "444455";
 
   private final CardRepository cardRepository;
   private final CardholderRepository cardholderRepository;
   private final CardCryptoUtil cardCryptoUtil;
+  private final CardConfig cardConfig;
 
   @Override
   @Transactional(readOnly = true)
@@ -46,10 +44,11 @@ public class CardServiceImpl implements CardService {
   }
 
   @Override
+  @Transactional
   public CardResponse createCard(CreateCardRequest request) {
     Cardholder owner = cardholderRepository.findById(request.cardholderId())
         .orElseThrow(() -> new EntityNotFoundException("Пользователь не найден"));
-    String rawCardNumber = CardGenerator.generate(BIN);
+    String rawCardNumber = CardGenerator.generate(cardConfig.getBin());
 
     Card card = Card.builder()
         .owner(owner)
@@ -65,14 +64,15 @@ public class CardServiceImpl implements CardService {
   }
 
   @Override
+  @Transactional
   public void updateStatus(Long id, CardStatus status) {
     Card card = cardRepository.findById(id)
         .orElseThrow(() -> new EntityNotFoundException("Карта не найдена"));
     card.setStatus(status);
-    cardRepository.save(card);
   }
 
   @Override
+  @Transactional
   public void deleteCard(Long id) {
     if (!cardRepository.existsById(id)) {
       throw new EntityNotFoundException("Карта не найдена");
@@ -81,12 +81,13 @@ public class CardServiceImpl implements CardService {
   }
 
   private CardResponse mapToResponse(Card card) {
+    Long ownerId = card.getOwner() != null ? card.getOwner().getId() : null;
     return new CardResponse(
         card.getId(),
         card.getCardNumberMasked(),
         card.getStatus(),
         card.getBalance(),
-        card.getOwner().getId());
+        ownerId);
   }
 
   @Override
@@ -107,11 +108,11 @@ public class CardServiceImpl implements CardService {
   }
 
   @Override
+  @Transactional
   public void blockOwnCard(String username, Long cardId) {
     Card card = cardRepository.findByIdAndOwner_Username(cardId, username)
         .orElseThrow(() -> new AccessDeniedException("Карта не найдена или не принадлежит вам"));
     card.setStatus(CardStatus.BLOCKED);
-    cardRepository.save(card);
   }
 
   @Override

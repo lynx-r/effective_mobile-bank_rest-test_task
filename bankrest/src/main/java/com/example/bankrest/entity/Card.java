@@ -3,6 +3,7 @@ package com.example.bankrest.entity;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.annotations.CreationTimestamp;
@@ -73,9 +74,11 @@ public class Card {
   @Column(name = "updated_at", nullable = true)
   private LocalDateTime updatedAt;
 
+  @Builder.Default
   @OneToMany(mappedBy = "fromCard")
-  private List<Transaction> outgoingTransactions;
+  private List<Transaction> outgoingTransactions = new ArrayList<>();
 
+  @Builder.Default
   @OneToMany(mappedBy = "toCard")
-  private List<Transaction> incomingTransactions;
+  private List<Transaction> incomingTransactions = new ArrayList<>();
 }

@@ -86,7 +86,6 @@ public class AppSecurityConfig {
 
           context.getClaims().claims((claims) -> {
             claims.put("roles", roles);
-            claims.put("test_field", "server_works");
           });
         }
       }

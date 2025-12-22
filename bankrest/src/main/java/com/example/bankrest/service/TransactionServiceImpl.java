@@ -24,26 +24,29 @@ public class TransactionServiceImpl implements TransactionService {
 
   @Override
   public void transferBetweenOwnCards(String username, InternalTransferRequest request) {
-    // 1. Загружаем карты и проверяем владельца
+    if (request.fromCardId().equals(request.toCardId())) {
+      throw new IllegalArgumentException("Нельзя переводить средства на ту же карту");
+    }
+
     Card fromCard = cardRepository.findByIdAndOwner_Username(request.fromCardId(), username)
         .orElseThrow(() -> new EntityNotFoundException("Карта списания не найдена"));
 
     Card toCard = cardRepository.findByIdAndOwner_Username(request.toCardId(), username)
         .orElseThrow(() -> new EntityNotFoundException("Карта зачисления не найдена"));
 
-    // 2. Проверки
-    if (fromCard.getBalance().compareTo(request.amount()) < 0) {
-      throw new InsufficientFundsException("Недостаточно средств");
-    }
     if (fromCard.getStatus() != CardStatus.ACTIVE) {
       throw new IllegalStateException("Карта списания заблокирована");
     }
+    if (toCard.getStatus() != CardStatus.ACTIVE) {
+      throw new IllegalStateException("Карта зачисления заблокирована");
+    }
+    if (fromCard.getBalance().compareTo(request.amount()) < 0) {
+      throw new InsufficientFundsException("Недостаточно средств");
+    }
 
-    // 3. Изменение балансов
     fromCard.setBalance(fromCard.getBalance().subtract(request.amount()));
     toCard.setBalance(toCard.getBalance().add(request.amount()));
 
-    // 4. Сохранение истории транзакций
     Transaction tx = Transaction.builder()
         .fromCard(fromCard)
         .toCard(toCard)
