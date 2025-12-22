@@ -56,19 +56,19 @@ class CardServiceImplTest {
   @InjectMocks
   private CardServiceImpl cardService;
 
-  private Cardholder testCardholder;
+  private Cardholder testOwner;
   private Card testCard1;
   private Card testCard2;
 
   @BeforeEach
   void setUp() {
-    testCardholder = new Cardholder();
-    testCardholder.setId(1L);
-    testCardholder.setUsername("user1");
-    testCardholder.setEmail("user1@example.com");
-    testCardholder.setFirstName("John");
-    testCardholder.setLastName("Doe");
-    testCardholder.setCreatedAt(LocalDateTime.now());
+    testOwner = new Cardholder();
+    testOwner.setId(1L);
+    testOwner.setUsername("user1");
+    testOwner.setEmail("user1@example.com");
+    testOwner.setFirstName("John");
+    testOwner.setLastName("Doe");
+    testOwner.setCreatedAt(LocalDateTime.now());
 
     testCard1 = Card.builder()
         .id(1L)
@@ -78,7 +78,7 @@ class CardServiceImplTest {
         .expiryDate(LocalDate.now().plusYears(4))
         .status(CardStatus.ACTIVE)
         .balance(BigDecimal.valueOf(1000.50))
-        .cardholder(testCardholder)
+        .owner(testOwner)
         .createdAt(LocalDateTime.now())
         .build();
 
@@ -90,7 +90,7 @@ class CardServiceImplTest {
         .expiryDate(LocalDate.now().plusYears(3))
         .status(CardStatus.ACTIVE)
         .balance(BigDecimal.valueOf(2500.00))
-        .cardholder(testCardholder)
+        .owner(testOwner)
         .createdAt(LocalDateTime.now())
         .build();
   }
@@ -134,7 +134,7 @@ class CardServiceImplTest {
   void createCard_ShouldCreateCardSuccessfully() {
     // Given
     CreateCardRequest request = new CreateCardRequest(1L);
-    when(cardholderRepository.findById(1L)).thenReturn(Optional.of(testCardholder));
+    when(cardholderRepository.findById(1L)).thenReturn(Optional.of(testOwner));
     when(cardCryptoUtil.maskCardNumber(any(String.class))).thenReturn("**** **** **** 1234");
     when(cardCryptoUtil.encrypt(any(String.class))).thenReturn("encrypted_123456");
     when(cardRepository.save(any(Card.class))).thenReturn(testCard1);
@@ -369,7 +369,7 @@ class CardServiceImplTest {
     void shouldHandleDatabaseConstraintViolationOnCardCreation() {
       // Given
       CreateCardRequest request = new CreateCardRequest(1L);
-      when(cardholderRepository.findById(1L)).thenReturn(Optional.of(testCardholder));
+      when(cardholderRepository.findById(1L)).thenReturn(Optional.of(testOwner));
       when(cardCryptoUtil.maskCardNumber(any(String.class))).thenReturn("**** **** **** 1234");
       when(cardCryptoUtil.encrypt(any(String.class))).thenReturn("encrypted_123456");
       when(cardRepository.save(any(Card.class))).thenThrow(new RuntimeException("Database constraint violation"));
@@ -435,7 +435,7 @@ class CardServiceImplTest {
             .expiryDate(LocalDate.now().plusYears(2))
             .status(CardStatus.ACTIVE)
             .balance(BigDecimal.valueOf(i * 100))
-            .cardholder(testCardholder)
+            .owner(testOwner)
             .createdAt(LocalDateTime.now())
             .build();
         largeCardList.add(card);
@@ -476,7 +476,7 @@ class CardServiceImplTest {
     void shouldValidateCardDataIntegrityDuringCreation() {
       // Given
       CreateCardRequest request = new CreateCardRequest(1L);
-      when(cardholderRepository.findById(1L)).thenReturn(Optional.of(testCardholder));
+      when(cardholderRepository.findById(1L)).thenReturn(Optional.of(testOwner));
       when(cardCryptoUtil.maskCardNumber(any(String.class))).thenReturn("**** **** **** 1234");
       when(cardCryptoUtil.encrypt(any(String.class))).thenReturn("encrypted_123456");
       when(cardRepository.save(any(Card.class))).thenReturn(testCard1);
@@ -515,7 +515,7 @@ class CardServiceImplTest {
       assertNotNull(testCard1.getExpiryDate());
       assertEquals(testCard1.getStatus(), CardStatus.BLOCKED);
       assertEquals(testCard1.getBalance(), BigDecimal.valueOf(1000.50));
-      assertNotNull(testCard1.getCardholder());
+      assertNotNull(testCard1.getOwner());
       assertNotNull(testCard1.getCreatedAt());
     }
   }

@@ -12,6 +12,7 @@ import com.example.authorizationserver.repository.UserRepository;
 import com.example.authorizationserver.request.RegisterRequest;
 import com.example.common.auth.event.UserCreatedEvent;
 
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
@@ -27,7 +28,7 @@ public class UserServiceImpl implements UserService {
   @Transactional
   public void register(RegisterRequest request) {
     if (userRepository.findByUsername(request.username()).isPresent()) {
-      throw new RuntimeException("Пользователь уже существует");
+      throw new EntityNotFoundException("Пользователь уже существует");
     }
 
     var user = new User();
@@ -39,7 +40,7 @@ public class UserServiceImpl implements UserService {
 
     // Назначаем роль по умолчанию (ROLE_USER)
     var defaultRole = roleRepository.findByName("ROLE_USER")
-        .orElseThrow(() -> new RuntimeException("Роль ROLE_USER не найдена"));
+        .orElseThrow(() -> new EntityNotFoundException("Роль ROLE_USER не найдена"));
     user.getRoles().add(defaultRole);
 
     userRepository.save(user);

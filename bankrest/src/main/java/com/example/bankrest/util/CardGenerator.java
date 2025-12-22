@@ -4,9 +4,7 @@ import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import com.example.bankrest.entity.Cardholder;
-
-public class CardUtils {
+public class CardGenerator {
   private static final Random RANDOM = new Random();
 
   /**
@@ -14,14 +12,14 @@ public class CardUtils {
    * 
    * @param bin Bank Identification Number (первые 6 цифр). Например, "444455"
    */
-  public static String generateCardNumber(String bin) {
+  public static String generate(String bin) {
     // 1. Берем BIN (6 цифр) и добавляем 9 случайных цифр
     String partialNumber = bin + IntStream.range(0, 9)
         .mapToObj(i -> String.valueOf(RANDOM.nextInt(10)))
         .collect(Collectors.joining());
 
     // 2. Вычисляем 16-ю контрольную цифру по алгоритму Луна
-    int checkDigit = CardUtils.calculateLuhnCheckDigit(partialNumber);
+    int checkDigit = CardGenerator.calculateLuhnCheckDigit(partialNumber);
 
     return partialNumber + checkDigit;
   }
@@ -46,7 +44,4 @@ public class CardUtils {
     return (10 - (sum % 10)) % 10;
   }
 
-  public static String createOwnerName(Cardholder cardholder) {
-    return cardholder.getFirstName().toUpperCase() + " " + cardholder.getLastName().toUpperCase();
-  }
 }

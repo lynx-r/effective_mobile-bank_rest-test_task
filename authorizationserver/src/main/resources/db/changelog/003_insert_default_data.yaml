@@ -1,7 +1,7 @@
 databaseChangeLog:
   - changeSet:
       id: insert-default-authorization-data
-      author: bankcards-app
+      author: authorizationserver-app
       changes:
         # Создание тестового администратора
         - insert:
@@ -12,7 +12,7 @@ databaseChangeLog:
                   value: admin
               - column:
                   name: email
-                  value: admin@bankcards.com
+                  value: admin@bankrest.com
               - column:
                   name: password
                   value: $2a$10$BkFJP4p8TrvOdmrtgKyNUOf7k6RKss8Udu6Win6CQ0g5loILniVvm

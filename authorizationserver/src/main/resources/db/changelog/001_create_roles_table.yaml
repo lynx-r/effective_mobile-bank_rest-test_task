@@ -1,7 +1,7 @@
 databaseChangeLog:
   - changeSet:
       id: create-roles-table
-      author: bankcards-app
+      author: authorizationserver-app
       changes:
         - createTable:
             tableName: roles

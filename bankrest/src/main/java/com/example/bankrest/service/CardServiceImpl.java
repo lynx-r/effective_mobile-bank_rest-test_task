@@ -4,6 +4,11 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,7 +20,7 @@ import com.example.bankrest.entity.Cardholder;
 import com.example.bankrest.repository.CardRepository;
 import com.example.bankrest.repository.CardholderRepository;
 import com.example.bankrest.util.CardCryptoUtil;
-import com.example.bankrest.util.CardUtils;
+import com.example.bankrest.util.CardGenerator;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -44,11 +49,11 @@ public class CardServiceImpl implements CardService {
   public CardResponse createCard(CreateCardRequest request) {
     Cardholder owner = cardholderRepository.findById(request.cardholderId())
         .orElseThrow(() -> new EntityNotFoundException("Пользователь не найден"));
-    String rawCardNumber = CardUtils.generateCardNumber(BIN);
+    String rawCardNumber = CardGenerator.generate(BIN);
 
     Card card = Card.builder()
-        .cardholder(owner)
-        .ownerName(CardUtils.createOwnerName(owner))
+        .owner(owner)
+        .ownerName(owner.getCardOwnerName())
         .cardNumberMasked(cardCryptoUtil.maskCardNumber(rawCardNumber))
         .cardNumberEncrypted(cardCryptoUtil.encrypt(rawCardNumber))
         .expiryDate(LocalDate.now().plusYears(4))
@@ -81,6 +86,44 @@ public class CardServiceImpl implements CardService {
         card.getCardNumberMasked(),
         card.getStatus(),
         card.getBalance(),
-        card.getCardholder().getId());
+        card.getOwner().getId());
   }
+
+  @Override
+  @Transactional(readOnly = true)
+  public Page<CardResponse> findUserCards(String username, String search, Pageable pageable) {
+    // 1. Очистка строки поиска (trim)
+    String cleanSearch = (search != null && !search.isBlank()) ? search.trim() : null;
+
+    if (cleanSearch == null || cleanSearch.isEmpty()) {
+      return Page.empty();
+    }
+
+    // 2. Если сортировка не задана клиентом, ставим по дате создания (новые сверху)
+    Pageable sortedPageable = pageable.isPaged() && pageable.getSort().isUnsorted()
+        ? PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by("createdAt").descending())
+        : pageable;
+
+    // 3. Запрос к БД
+    Page<Card> cards = cardRepository.findByUserWithFilter(username, cleanSearch, sortedPageable);
+
+    // 4. Маппинг в DTO
+    return cards.map(this::mapToResponse);
+  }
+
+  @Override
+  public void blockOwnCard(String username, Long cardId) {
+    Card card = cardRepository.findByIdAndOwner_Username(cardId, username)
+        .orElseThrow(() -> new AccessDeniedException("Карта не найдена или не принадлежит вам"));
+    card.setStatus(CardStatus.BLOCKED);
+    cardRepository.save(card);
+  }
+
+  @Override
+  public BigDecimal getUserCardBalance(String username, Long cardId) {
+    return cardRepository.findByIdAndOwner_Username(cardId, username)
+        .map(Card::getBalance)
+        .orElseThrow(() -> new AccessDeniedException("Доступ запрещен"));
+  }
+
 }

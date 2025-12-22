@@ -1,7 +1,7 @@
 databaseChangeLog:
   - changeSet:
       id: insert-default-bank-data
-      author: bankcards-app
+      author: bankrest-app
       changes:
         # Создание тестового администратора
         - insert:
@@ -12,7 +12,7 @@ databaseChangeLog:
                   value: admin
               - column:
                   name: email
-                  value: admin@bankcards.com
+                  value: admin@bankrest.com
               - column:
                   name: first_name
                   value: Admin
@@ -60,7 +60,7 @@ databaseChangeLog:
                   name: balance
                   value: 10000.00
               - column:
-                  name: cardholder_id
+                  name: owner_id
                   value: 1  # admin user
 
         - insert:
@@ -85,7 +85,7 @@ databaseChangeLog:
                   name: balance
                   value: 5000.00
               - column:
-                  name: cardholder_id
+                  name: owner_id
                   value: 2  # regular user
 
         - insert:
@@ -110,5 +110,5 @@ databaseChangeLog:
                   name: balance
                   value: 2500.75
               - column:
-                  name: cardholder_id
+                  name: owner_id
                   value: 2  # regular user

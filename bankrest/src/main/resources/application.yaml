@@ -4,7 +4,7 @@ spring:
     active:
     - dev
   application:
-    name: BankCards
+    name: BankRest
   datasource:
     url: jdbc:postgresql://localhost:5432/bankrest_db
     username: ${DB_USERNAME:postgres}
@@ -43,7 +43,7 @@ spring:
           issuer-uri: ${OAUTH2_PROVIDER:http://auth-server:9000}
   kafka:
     consumer:
-      group-id: bankcards-group
+      group-id: bankrest-group
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
@@ -62,7 +62,7 @@ server:
 
 logging:
   level:
-    "[com.example.bankcards]": DEBUG
+    "[com.example.bankrest]": DEBUG
     "[org.springframework.security]": DEBUG
     liquibase: DEBUG
     "[org.springframework.web.filter]": DEBUG

@@ -62,8 +62,8 @@ public class Card {
   private BigDecimal balance = BigDecimal.ZERO;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "cardholder_id", nullable = false, foreignKey = @ForeignKey(name = "fk_cards_cardholder_id"))
-  private Cardholder cardholder;
+  @JoinColumn(name = "owner_id", nullable = false, foreignKey = @ForeignKey(name = "fk_cards_owner_id"))
+  private Cardholder owner;
 
   @CreationTimestamp
   @Column(name = "created_at", nullable = false, updatable = false)

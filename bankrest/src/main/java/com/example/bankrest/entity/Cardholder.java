@@ -45,11 +45,15 @@ public class Cardholder {
   private LocalDateTime updatedAt;
 
   // По желанию: двусторонняя связь
-  @OneToMany(mappedBy = "cardholder", cascade = CascadeType.ALL)
+  @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
   private List<Card> cards;
 
   public void addCard(Card card) {
     cards.add(card);
-    card.setCardholder(this);
+    card.setOwner(this);
+  }
+
+  public String getCardOwnerName() {
+    return this.getFirstName().toUpperCase() + " " + this.getLastName().toUpperCase();
   }
 }
