@@ -92,23 +92,18 @@ public class CardServiceImpl implements CardService {
   @Override
   @Transactional(readOnly = true)
   public Page<CardResponse> findUserCards(String username, String search, Pageable pageable) {
-    // 1. Очистка строки поиска (trim)
-    String cleanSearch = (search != null && !search.isBlank()) ? search.trim() : null;
-
-    if (cleanSearch == null || cleanSearch.isEmpty()) {
-      return Page.empty();
-    }
-
-    // 2. Если сортировка не задана клиентом, ставим по дате создания (новые сверху)
     Pageable sortedPageable = pageable.isPaged() && pageable.getSort().isUnsorted()
         ? PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by("createdAt").descending())
         : pageable;
 
-    // 3. Запрос к БД
-    Page<Card> cards = cardRepository.findByUserWithFilter(username, cleanSearch, sortedPageable);
+    String cleanSearch = (search != null && !search.isBlank()) ? search.trim() : null;
 
-    // 4. Маппинг в DTO
-    return cards.map(this::mapToResponse);
+    if (cleanSearch == null || cleanSearch.isEmpty()) {
+      return cardRepository.findByOwner_Username(username,
+          sortedPageable).map(this::mapToResponse);
+    }
+
+    return cardRepository.findByUserWithFilter(username, cleanSearch, sortedPageable).map(this::mapToResponse);
   }
 
   @Override
