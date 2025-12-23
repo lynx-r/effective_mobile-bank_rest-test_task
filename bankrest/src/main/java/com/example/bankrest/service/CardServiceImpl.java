@@ -25,22 +25,29 @@ import com.example.bankrest.util.CardGenerator;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class CardServiceImpl implements CardService {
 
   private final CardRepository cardRepository;
   private final CardholderRepository cardholderRepository;
   private final CardCryptoUtil cardCryptoUtil;
   private final CardConfig cardConfig;
+  private final AuditService auditService;
 
   @Override
   @Transactional(readOnly = true)
   public List<CardResponse> findAllCards() {
-    return cardRepository.findAll().stream()
-        .map(this::mapToResponse)
+    List<CardResponse> cards = cardRepository.findAll().stream()
+        .map(CardMapper::mapToResponse)
         .toList();
+
+    auditService.logCardsListView("admin", null, "findAll");
+    log.info("Admin requested list of all cards. Total cards: {}", cards.size());
+    return cards;
   }
 
   @Override
@@ -60,7 +67,14 @@ public class CardServiceImpl implements CardService {
         .status(CardStatus.ACTIVE)
         .build();
 
-    return mapToResponse(cardRepository.save(card));
+    CardResponse response = CardMapper.mapToResponse(cardRepository.save(card));
+
+    // Аудит создания карты
+    auditService.logCardCreation("admin", card.getId(), card.getCardNumberMasked(), owner.getId());
+    log.info("Card created successfully. Card ID: {}, Masked Number: {}, Owner ID: {}",
+        card.getId(), card.getCardNumberMasked(), owner.getId());
+
+    return response;
   }
 
   @Override
@@ -68,26 +82,28 @@ public class CardServiceImpl implements CardService {
   public void updateStatus(Long id, CardStatus status) {
     Card card = cardRepository.findById(id)
         .orElseThrow(() -> new EntityNotFoundException("Карта не найдена"));
+
+    CardStatus previousStatus = card.getStatus();
     card.setStatus(status);
+    // cardRepository.save(card);
+
+    // Аудит изменения статуса карты
+    auditService.logCardStatusChange("admin", card.getId(), previousStatus.name(), status.name());
+    log.warn("Card status updated. Card ID: {}, Previous Status: {}, New Status: {}",
+        card.getId(), previousStatus, status);
   }
 
   @Override
   @Transactional
   public void deleteCard(Long id) {
-    if (!cardRepository.existsById(id)) {
+    var cardOptional = cardRepository.findById(id);
+    if (cardOptional.isEmpty()) {
       throw new EntityNotFoundException("Карта не найдена");
     }
+    var card = cardOptional.get();
+    auditService.logCardDeletion("admin", id, card.getCardNumberMasked());
+    log.warn("Card deleted. Card ID: {}, maskedCardNumber: {}", id, card.getCardNumberMasked());
     cardRepository.deleteById(id);
-  }
-
-  private CardResponse mapToResponse(Card card) {
-    Long ownerId = card.getOwner() != null ? card.getOwner().getId() : null;
-    return new CardResponse(
-        card.getId(),
-        card.getCardNumberMasked(),
-        card.getStatus(),
-        card.getBalance(),
-        ownerId);
   }
 
   @Override
@@ -100,11 +116,16 @@ public class CardServiceImpl implements CardService {
     String cleanSearch = (search != null && !search.isBlank()) ? search.trim() : null;
 
     if (cleanSearch == null || cleanSearch.isEmpty()) {
+      auditService.logCardsListView("admin", sortedPageable.getPageSize(), "findByOwner_Username");
+      log.info("User requested list of cards. Page size: {}", sortedPageable.getPageSize());
       return cardRepository.findByOwner_Username(username,
-          sortedPageable).map(this::mapToResponse);
+          sortedPageable).map(CardMapper::mapToResponse);
     }
 
-    return cardRepository.findByUserWithFilter(username, cleanSearch, sortedPageable).map(this::mapToResponse);
+    auditService.logCardsListView("admin", sortedPageable.getPageSize(), "findByUserWithFilter");
+    log.info("User requested list of cards with filter. Search: {}, Page size: {}", cleanSearch,
+        sortedPageable.getPageSize());
+    return cardRepository.findByUserWithFilter(username, cleanSearch, sortedPageable).map(CardMapper::mapToResponse);
   }
 
   @Override
@@ -112,13 +133,32 @@ public class CardServiceImpl implements CardService {
   public void blockOwnCard(String username, Long cardId) {
     Card card = cardRepository.findByIdAndOwner_Username(cardId, username)
         .orElseThrow(() -> new AccessDeniedException("Карта не найдена или не принадлежит вам"));
+
+    if (card.getStatus() == CardStatus.BLOCKED) {
+      log.info("User {} attempted to block already blocked card {}", username, cardId);
+      return;
+    }
+
+    CardStatus previousStatus = card.getStatus();
     card.setStatus(CardStatus.BLOCKED);
+    // cardRepository.save(card);
+
+    // Аудит блокировки карты пользователем
+    auditService.logCardBlocking(username, card.getId(), card.getCardNumberMasked());
+    log.warn("Card blocked by user. Username: {}, Card ID: {}, Masked Number: {}, Previous Status: {}",
+        username, card.getId(), card.getCardNumberMasked(), previousStatus);
   }
 
   @Override
   public BigDecimal getUserCardBalance(String username, Long cardId) {
     return cardRepository.findByIdAndOwner_Username(cardId, username)
-        .map(Card::getBalance)
+        .map((card) -> {
+          BigDecimal balance = card.getBalance();
+          auditService.logBalanceView("user", cardId, card.getCardNumberMasked(), card.getBalance());
+          log.info("User requested balance. Username: {}, Card ID: {}, Masked Number: {}, Balance: {}",
+              username, card.getId(), card.getCardNumberMasked(), balance);
+          return balance;
+        })
         .orElseThrow(() -> new AccessDeniedException("Доступ запрещен"));
   }
 

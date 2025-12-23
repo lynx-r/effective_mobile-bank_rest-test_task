@@ -12,19 +12,25 @@ import com.example.bankrest.repository.CardholderRepository;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class CardholderServiceImpl implements CardholderService {
 
   private final CardholderRepository cardholderRepository;
+  private final AuditService auditService;
 
   @Override
   @Transactional(readOnly = true)
   public List<CardholderResponse> findAllUsers() {
-    return cardholderRepository.findAll().stream()
+    List<CardholderResponse> cardholders = cardholderRepository.findAll().stream()
         .map(u -> new CardholderResponse(u.getId(), u.getUsername(), u.getFirstName(), u.getLastName(), u.getEnabled()))
         .toList();
+    log.info("Admin requested list of all cardholders. Total cardholders: {}", cardholders.size());
+    auditService.logCardholdersListView("admin", null, "findAll");
+    return cardholders;
   }
 
   @Override
@@ -36,6 +42,8 @@ public class CardholderServiceImpl implements CardholderService {
     if (cardholder.getCards() != null && !cardholder.getCards().isEmpty()) {
       cardholder.getCards().forEach(card -> card.setStatus(CardStatus.BLOCKED));
     }
+    auditService.logCardholderBlocking("admin", id);
+    log.warn("Cardholder blocked by admin. Cardholder ID: {}", id);
   }
 
   @Override
@@ -44,6 +52,8 @@ public class CardholderServiceImpl implements CardholderService {
     if (!cardholderRepository.existsById(id)) {
       throw new EntityNotFoundException("Пользователь не найден");
     }
+    auditService.logCardholderDeletion("admin", id);
+    log.warn("Card deleted. Cardholder ID: {}", id);
     cardholderRepository.deleteById(id);
   }
 }

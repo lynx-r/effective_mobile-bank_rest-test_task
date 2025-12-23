@@ -64,7 +64,8 @@ bank:
   card:
     bin: ${CARD_BIN:444455}
   crypto:
-    encryption-key: ${CRYPTO_KEY:12345678123456781234567812345678}
+    encryption-key: ${CRYPTO_ENCRYPTION_KEY:DevKey1234567890123456789012abcd} # 32 chars для AES-256
+    # ВАЖНО: Для production используйте переменную окружения CRYPTO_ENCRYPTION_KEY
 
 logging:
   level:

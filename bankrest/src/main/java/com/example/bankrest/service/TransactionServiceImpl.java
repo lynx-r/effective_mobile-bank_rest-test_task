@@ -13,14 +13,17 @@ import com.example.bankrest.repository.TransactionRepository;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class TransactionServiceImpl implements TransactionService {
 
   private final CardRepository cardRepository;
   private final TransactionRepository transactionRepository;
+  private final AuditService auditService;
 
   @Override
   public void transferBetweenOwnCards(String username, InternalTransferRequest request) {
@@ -55,6 +58,14 @@ public class TransactionServiceImpl implements TransactionService {
         .description("Перевод между своими картами")
         .build();
 
-    transactionRepository.save(tx);
+    Transaction savedTx = transactionRepository.save(tx);
+
+    // Аудит перевода денег
+    auditService.logTransfer(username, fromCard.getId(), toCard.getId(),
+        fromCard.getCardNumberMasked(), toCard.getCardNumberMasked(),
+        request.amount().toString(), "RUB");
+    log.info("Transfer completed successfully. User: {}, From Card: {}, To Card: {}, Amount: {}, Transaction ID: {}",
+        username, fromCard.getCardNumberMasked(), toCard.getCardNumberMasked(),
+        request.amount(), savedTx.getId());
   }
 }

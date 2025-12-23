@@ -1,5 +1,125 @@
-springdoc:
-  api-docs:
-    enabled: false
-  swagger-ui:
-    enabled: false
+# Production конфигурация для BankRest
+# ВАЖНО: Все переменные должны быть установлены через переменные окружения
+
+spring:
+  config:
+    activate:
+      on-profile: prod
+  
+  # Production настройки БД с HikariCP
+  datasource:
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:20}
+      minimum-idle: ${DB_MIN_IDLE:5}
+      connection-timeout: ${DB_CONNECTION_TIMEOUT:30000}
+      idle-timeout: ${DB_IDLE_TIMEOUT:600000}
+      max-lifetime: ${DB_MAX_LIFETIME:1800000}
+      connection-test-query: SELECT 1
+      validation-timeout: 5000
+      leak-detection-threshold: 60000
+      
+  # Production настройки JPA
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        jdbc:
+          batch_size: 50
+        order_inserts: true
+        order_updates: true
+        generate_statistics: false
+        format_sql: false
+
+  # Production настройки кэширования
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=1000,expireAfterWrite=30m,recordStats
+
+  # Production настройки безопасности
+  security:
+    oauth2:
+      client:
+        registration:
+          oidc-client:
+            client-id: ${OAUTH2_CLIENT_ID}
+            client-secret: ${OAUTH2_CLIENT_SECRET}
+            redirect-uri: "${baseUrl}/login/oauth2/code/{registrationId}"
+      resourceserver:
+        jwt:
+          issuer-uri: ${OAUTH2_ISSUER_URI}
+
+# Настройки банковского приложения
+bank:
+  card:
+    bin: ${CARD_BIN}
+  crypto:
+    encryption-key: ${CRYPTO_ENCRYPTION_KEY}
+
+# Production настройки сервера
+server:
+  port: ${PORT:8080}
+  servlet:
+    session:
+      cookie:
+        name: BANKREST_CLIENT_SESSION
+        secure: true
+        http-only: true
+        same-site: strict
+  compression:
+    enabled: true
+    mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json
+    min-response-size: 1024
+
+# Production настройки логирования
+logging:
+  level:
+    root: WARN
+    "[com.example.bankrest]": INFO
+    "[org.springframework.security]": WARN
+    "[org.hibernate.SQL]": WARN
+    "[org.springframework.web]": WARN
+    liquibase: INFO
+    "[org.springframework.web.filter]": WARN
+    "[org.springframework.security.oauth2.client]": WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: ${LOG_FILE_PATH:/var/log/bankrest/application.log}
+    max-size: ${LOG_FILE_MAX_SIZE:100MB}
+    max-history: ${LOG_FILE_MAX_HISTORY:30}
+
+# Production настройки Kafka
+kafka:
+  consumer:
+    group-id: bankrest-prod-group
+    auto-offset-reset: earliest
+    enable-auto-commit: false
+    properties:
+      spring.json.trusted.packages: "com.example.common.*"
+  producer:
+    acks: all
+    retries: 3
+    batch-size: 16384
+    buffer-memory: 33554432
+
+# Production настройки Actuator (мониторинг)
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+  info:
+    env:
+      enabled: true
