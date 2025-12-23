@@ -14,11 +14,19 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.Data;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Table(name = "cardholders")
 @Entity
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Cardholder {
 
   @Id
@@ -42,15 +50,18 @@ public class Cardholder {
   @Column(name = "last_name")
   private String lastName;
 
+  @Builder.Default
   @Column(name = "enabled")
   private Boolean enabled = true;
 
+  @Builder.Default
   @Column(name = "created_at", nullable = false, updatable = false)
-  private LocalDateTime createdAt;
+  private LocalDateTime createdAt = LocalDateTime.now();
 
   @Column(name = "updated_at", nullable = true)
   private LocalDateTime updatedAt;
 
+  @Builder.Default
   @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
   private List<Card> cards = new ArrayList<>();
 

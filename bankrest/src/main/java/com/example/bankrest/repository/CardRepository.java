@@ -19,6 +19,11 @@ public interface CardRepository extends JpaRepository<Card, Long> {
       @Param("search") String search,
       Pageable pageable);
 
+  @Query("SELECT c FROM Card c WHERE " +
+      "LOWER(c.ownerName) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+      "c.cardNumberMasked LIKE CONCAT('%', :search, '%')")
+  Page<Card> findByOwnerNameAndCardNumberMasked(@Param("search") String search, Pageable pageable);
+
   Optional<Card> findByIdAndOwner_Username(Long cardId, String username);
 
   Page<Card> findByOwner_Username(String username, Pageable pageable);

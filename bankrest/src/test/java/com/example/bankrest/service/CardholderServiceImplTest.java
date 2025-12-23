@@ -5,8 +5,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -35,8 +36,11 @@ class CardholderServiceImplTest {
   @Mock
   private CardholderRepository cardholderRepository;
 
+  @Mock
+  private AuditService auditService;
+
   @InjectMocks
-  private CardholderServiceImpl cardholderService;
+  private AdminCardholderServiceImpl cardholderService;
 
   private Cardholder testCardholder1;
   private Cardholder testCardholder2;
@@ -67,7 +71,7 @@ class CardholderServiceImplTest {
     when(cardholderRepository.findAll()).thenReturn(cardholders);
 
     // When
-    List<CardholderResponse> result = cardholderService.findAllUsers();
+    List<CardholderResponse> result = cardholderService.findAllCardholders();
 
     // Then
     assertEquals(2, result.size());
@@ -84,7 +88,7 @@ class CardholderServiceImplTest {
     when(cardholderRepository.findAll()).thenReturn(new ArrayList<>());
 
     // When
-    List<CardholderResponse> result = cardholderService.findAllUsers();
+    List<CardholderResponse> result = cardholderService.findAllCardholders();
 
     // Then
     assertEquals(0, result.size());
@@ -95,14 +99,13 @@ class CardholderServiceImplTest {
   void blockUser_ShouldBlockUserSuccessfully() {
     // Given
     when(cardholderRepository.findById(1L)).thenReturn(Optional.of(testCardholder1));
-    when(cardholderRepository.save(any(Cardholder.class))).thenReturn(testCardholder1);
+    doNothing().when(auditService).logCardholderBlocking(anyString(), anyLong());
 
     // When
-    cardholderService.blockUser(1L);
+    cardholderService.blockCardholder(1L);
 
     // Then
     verify(cardholderRepository).findById(1L);
-    verify(cardholderRepository).save(testCardholder1);
   }
 
   @Test
@@ -112,7 +115,7 @@ class CardholderServiceImplTest {
 
     // When & Then
     EntityNotFoundException exception = assertThrows(EntityNotFoundException.class,
-        () -> cardholderService.blockUser(1L));
+        () -> cardholderService.blockCardholder(1L));
 
     assertEquals("Пользователь не найден", exception.getMessage());
     verify(cardholderRepository).findById(1L);
@@ -122,26 +125,29 @@ class CardholderServiceImplTest {
   @Test
   void deleteUser_ShouldDeleteUserSuccessfully() {
     // Given
+    when(cardholderRepository.existsById(1L)).thenReturn(true);
     doNothing().when(cardholderRepository).deleteById(1L);
 
     // When
-    cardholderService.deleteUser(1L);
+    cardholderService.deleteCardholder(1L);
 
     // Then
+    verify(cardholderRepository).existsById(1L);
     verify(cardholderRepository).deleteById(1L);
   }
 
   @Test
   void deleteUser_ShouldThrowException_WhenUserNotFound() {
     // Given
-    doThrow(new RuntimeException("User not found")).when(cardholderRepository).deleteById(1L);
+    when(cardholderRepository.existsById(1L)).thenReturn(false);
 
     // When & Then
-    RuntimeException exception = assertThrows(RuntimeException.class,
-        () -> cardholderService.deleteUser(1L));
+    EntityNotFoundException exception = assertThrows(EntityNotFoundException.class,
+        () -> cardholderService.deleteCardholder(1L));
 
-    assertEquals("User not found", exception.getMessage());
-    verify(cardholderRepository).deleteById(1L);
+    assertEquals("Пользователь не найден", exception.getMessage());
+    verify(cardholderRepository).existsById(1L);
+    verify(cardholderRepository, never()).deleteById(any());
   }
 
   // Enhanced Tests with Better Coverage
@@ -154,7 +160,7 @@ class CardholderServiceImplTest {
     when(cardholderRepository.save(any(Cardholder.class))).thenReturn(testCardholder1);
 
     // When
-    cardholderService.blockUser(1L);
+    cardholderService.blockCardholder(1L);
 
     // Then
     verify(cardholderRepository).findById(1L);
@@ -170,7 +176,7 @@ class CardholderServiceImplTest {
     when(cardholderRepository.save(any(Cardholder.class))).thenReturn(testCardholder1);
 
     // When
-    cardholderService.blockUser(1L);
+    cardholderService.blockCardholder(1L);
 
     // Then
     verify(cardholderRepository).findById(1L);
@@ -186,7 +192,7 @@ class CardholderServiceImplTest {
     when(cardholderRepository.save(any(Cardholder.class))).thenReturn(testCardholder1);
 
     // When
-    cardholderService.blockUser(1L);
+    cardholderService.blockCardholder(1L);
 
     // Then
     verify(cardholderRepository).findById(1L);
@@ -202,7 +208,7 @@ class CardholderServiceImplTest {
     when(cardholderRepository.save(any(Cardholder.class))).thenReturn(testCardholder1);
 
     // When
-    cardholderService.blockUser(1L);
+    cardholderService.blockCardholder(1L);
 
     // Then
     verify(cardholderRepository).findById(1L);
@@ -220,7 +226,7 @@ class CardholderServiceImplTest {
     when(cardholderRepository.save(any(Cardholder.class))).thenReturn(testCardholder1);
 
     // When
-    cardholderService.blockUser(1L);
+    cardholderService.blockCardholder(1L);
 
     // Then
     verify(cardholderRepository).findById(1L);
@@ -238,7 +244,7 @@ class CardholderServiceImplTest {
     when(cardholderRepository.save(any(Cardholder.class))).thenReturn(testCardholder1);
 
     // When
-    cardholderService.blockUser(1L);
+    cardholderService.blockCardholder(1L);
 
     // Then
     verify(cardholderRepository).findById(1L);
@@ -256,7 +262,7 @@ class CardholderServiceImplTest {
 
     // When & Then
     RuntimeException exception = assertThrows(RuntimeException.class,
-        () -> cardholderService.blockUser(1L));
+        () -> cardholderService.blockCardholder(1L));
 
     assertEquals("Foreign key constraint violation", exception.getMessage());
     verify(cardholderRepository).findById(1L);
@@ -270,7 +276,7 @@ class CardholderServiceImplTest {
 
     // When & Then
     RuntimeException exception = assertThrows(RuntimeException.class,
-        () -> cardholderService.findAllUsers());
+        () -> cardholderService.findAllCardholders());
 
     assertEquals("Database connection failed", exception.getMessage());
     verify(cardholderRepository).findAll();
@@ -283,7 +289,7 @@ class CardholderServiceImplTest {
 
     // When & Then
     EntityNotFoundException exception = assertThrows(EntityNotFoundException.class,
-        () -> cardholderService.blockUser(1L));
+        () -> cardholderService.blockCardholder(1L));
 
     assertEquals("Пользователь не найден", exception.getMessage());
     verify(cardholderRepository).findById(1L);
@@ -308,7 +314,7 @@ class CardholderServiceImplTest {
     when(cardholderRepository.findAll()).thenReturn(largeUserList);
 
     // When
-    List<CardholderResponse> result = cardholderService.findAllUsers();
+    List<CardholderResponse> result = cardholderService.findAllCardholders();
 
     // Then
     assertEquals(500, result.size());
@@ -322,7 +328,7 @@ class CardholderServiceImplTest {
     when(cardholderRepository.save(any(Cardholder.class))).thenReturn(testCardholder1);
 
     // When
-    cardholderService.blockUser(1L);
+    cardholderService.blockCardholder(1L);
 
     // Then - verify all fields are preserved except enabled flag
     assertEquals(Long.valueOf(1L), testCardholder1.getId());
@@ -341,7 +347,7 @@ class CardholderServiceImplTest {
     when(cardholderRepository.findAll()).thenReturn(users);
 
     // When
-    List<CardholderResponse> result = cardholderService.findAllUsers();
+    List<CardholderResponse> result = cardholderService.findAllCardholders();
 
     // Then
     assertNotNull(result);

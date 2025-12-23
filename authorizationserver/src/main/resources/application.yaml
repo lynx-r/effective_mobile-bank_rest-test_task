@@ -40,7 +40,7 @@ spring:
                 - "profile"
                 - "email"
                 - "read"
-            require-authorization-consent: true
+            require-authorization-consent: false
   kafka:
     bootstrap-servers: 
       - ${KAFKA_SERVER:localhost:9092}

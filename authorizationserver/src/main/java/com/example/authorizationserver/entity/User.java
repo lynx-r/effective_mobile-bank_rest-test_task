@@ -15,6 +15,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Table(name = "users")
@@ -32,6 +34,16 @@ public class User {
 
   @Column(name = "email", unique = true)
   private String email;
+
+  @NotNull
+  @NotBlank
+  @Column(name = "first_name")
+  private String firstName;
+
+  @NotNull
+  @NotBlank
+  @Column(name = "last_name")
+  private String lastName;
 
   @Column(name = "enabled")
   private Boolean enabled = true;

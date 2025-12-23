@@ -1,7 +1,8 @@
 package com.example.bankrest.controller;
 
-import java.util.List;
-
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -9,10 +10,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.bankrest.dto.CardholderResponse;
-import com.example.bankrest.service.CardholderService;
+import com.example.bankrest.service.AdminCardholderService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -22,22 +24,24 @@ import lombok.RequiredArgsConstructor;
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminCardholderController {
 
-  private final CardholderService userService;
+  private final AdminCardholderService cardholderService;
 
   @GetMapping
-  public ResponseEntity<List<CardholderResponse>> getAllUsers() {
-    return ResponseEntity.ok(userService.findAllUsers());
+  public ResponseEntity<Page<CardholderResponse>> getAllUsers(
+      @RequestParam(required = false) String search,
+      @ParameterObject Pageable pageable) {
+    return ResponseEntity.ok(cardholderService.findCardholders(search, pageable));
   }
 
   @PutMapping("/{id}/block")
   public ResponseEntity<Void> blockUser(@PathVariable Long id) {
-    userService.blockUser(id);
+    cardholderService.blockCardholder(id);
     return ResponseEntity.noContent().build();
   }
 
   @DeleteMapping("/{id}")
   public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-    userService.deleteUser(id);
+    cardholderService.deleteCardholder(id);
     return ResponseEntity.noContent().build();
   }
 }

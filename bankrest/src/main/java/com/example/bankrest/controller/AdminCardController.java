@@ -1,7 +1,8 @@
 package com.example.bankrest.controller;
 
-import java.util.List;
-
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -18,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.bankrest.dto.CardResponse;
 import com.example.bankrest.dto.CreateCardRequest;
 import com.example.bankrest.entity.CardStatus;
-import com.example.bankrest.service.CardService;
+import com.example.bankrest.service.AdminCardService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -29,11 +30,13 @@ import lombok.RequiredArgsConstructor;
 @PreAuthorize("hasRole('ADMIN')") // Доступ только для администраторов
 public class AdminCardController {
 
-  private final CardService cardService;
+  private final AdminCardService cardService;
 
   @GetMapping
-  public ResponseEntity<List<CardResponse>> getAllCards() {
-    return ResponseEntity.ok(cardService.findAllCards());
+  public ResponseEntity<Page<CardResponse>> getAllCards(
+      @RequestParam(required = false) String search,
+      @ParameterObject Pageable pageable) {
+    return ResponseEntity.ok(cardService.findCards(search, pageable));
   }
 
   @PostMapping

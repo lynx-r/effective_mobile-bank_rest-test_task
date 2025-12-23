@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 
 import org.springframework.stereotype.Service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -14,112 +15,127 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class AuditService {
+
+  private final AuthenticationFacade authenticationFacade;
 
   /**
    * Логирует операцию создания карты
    */
-  public void logCardCreation(String username, Long cardId, String maskedCardNumber, Long cardholderId) {
+  public void logCardCreation(Long cardId, String maskedCardNumber, Long cardholderId) {
     log.info("CARD AUDIT - CREATED: user={}, cardId={}, maskedCardNumber={}, cardholderId={}, timestamp={}",
-        username, cardId, maskedCardNumber, cardholderId, LocalDateTime.now());
+        authenticationFacade.getAuthenticationName(), cardId, maskedCardNumber, cardholderId, LocalDateTime.now());
   }
 
   /**
    * Логирует операцию изменения статуса карты
    */
-  public void logCardStatusChange(String username, Long cardId, String fromStatus, String toStatus) {
+  public void logCardStatusChange(Long cardId, String fromStatus, String toStatus) {
     log.warn("CARD AUDIT - STATUS_CHANGED: user={}, cardId={}, fromStatus={}, toStatus={}, timestamp={}",
-        username, cardId, fromStatus, toStatus, LocalDateTime.now());
+        authenticationFacade.getAuthenticationName(), cardId, fromStatus, toStatus, LocalDateTime.now());
   }
 
   /**
    * Логирует операцию удаления карты
    */
-  public void logCardDeletion(String username, Long cardId, String maskedCardNumber) {
+  public void logCardDeletion(Long cardId, String maskedCardNumber) {
     log.warn("CARD AUDIT - DELETED: user={}, cardId={}, maskedCardNumber={}, timestamp={}",
-        username, cardId, maskedCardNumber, LocalDateTime.now());
+        authenticationFacade.getAuthenticationName(), cardId, maskedCardNumber, LocalDateTime.now());
   }
 
   /**
    * Логирует операцию удаления карты
    */
-  public void logCardholderDeletion(String username, Long cardId) {
-    log.warn("CARD AUDIT - DELETED: user={}, cardId={}, timestamp={}",
-        username, cardId, LocalDateTime.now());
+  public void logCardholderDeletion(Long cardId) {
+    log.warn("CARDHOLDER AUDIT - DELETED: user={}, cardId={}, timestamp={}",
+        authenticationFacade.getAuthenticationName(), cardId, LocalDateTime.now());
   }
 
   /**
    * Логирует операцию блокировки карты пользователем
    */
-  public void logCardBlocking(String username, Long cardId, String maskedCardNumber) {
+  public void logCardBlocking(Long cardId, String maskedCardNumber) {
     log.warn("CARD AUDIT - BLOCKED_BY_USER: user={}, cardId={}, maskedCardNumber={}, timestamp={}",
-        username, cardId, maskedCardNumber, LocalDateTime.now());
+        authenticationFacade.getAuthenticationName(), cardId, maskedCardNumber, LocalDateTime.now());
+  }
+
+  /**
+   * Логирует регистрацию держателя карт
+   */
+  public void logCardholderRegister(Long cardholderId, Long cardId, String maskedCardNumber) {
+    log.warn("CARDHOLDER AUDIT - REGISTER: cardholderId={}, cardId={}, maskedCardNumber, timestamp={}",
+        cardholderId, cardId, maskedCardNumber, LocalDateTime.now());
   }
 
   /**
    * Логирует операцию блокировки держателя карт
    */
-  public void logCardholderBlocking(String username, Long cardholderId) {
-    log.warn("CARD AUDIT - BLOCKED_BY_USER: user={}, cardId={}, timestamp={}",
-        username, cardholderId, LocalDateTime.now());
+  public void logCardholderBlocking(Long cardholderId) {
+    log.warn("CARDHOLDER AUDIT - BLOCKED_BY_USER: user={}, cardId={}, timestamp={}",
+        authenticationFacade.getAuthenticationName(), cardholderId, LocalDateTime.now());
   }
 
   /**
    * Логирует операцию перевода денег между картами
    */
-  public void logTransfer(String username, Long fromCardId, Long toCardId, String fromCardMasked,
+  public void logTransfer(Long fromCardId, Long toCardId, String fromCardMasked,
       String toCardMasked, String amount, String currency) {
     log.info(
         "TRANSFER AUDIT - EXECUTED: user={}, fromCardId={}, toCardId={}, fromCardMasked={}, toCardMasked={}, amount={}, currency={}, timestamp={}",
-        username, fromCardId, toCardId, fromCardMasked, toCardMasked, amount, currency, LocalDateTime.now());
+        authenticationFacade.getAuthenticationName(), fromCardId, toCardId, fromCardMasked, toCardMasked, amount,
+        currency,
+        LocalDateTime.now());
   }
 
   /**
    * Логирует попытку несанкционированного доступа
    */
-  public void logUnauthorizedAccess(String username, String action, String resource, String reason) {
+  public void logUnauthorizedAccess(String action, String resource, String reason) {
     log.error("SECURITY AUDIT - UNAUTHORIZED_ACCESS: user={}, action={}, resource={}, reason={}, timestamp={}",
-        username, action, resource, reason, LocalDateTime.now());
+        authenticationFacade.getAuthenticationName(), action, resource, reason, LocalDateTime.now());
   }
 
   /**
    * Логирует ошибки валидации
    */
-  public void logValidationError(String username, String action, String field, String value, String error) {
+  public void logValidationError(String action, String field, String value, String error) {
     log.warn("VALIDATION AUDIT - ERROR: user={}, action={}, field={}, value={}, error={}, timestamp={}",
-        username, action, field, value, error, LocalDateTime.now());
+        authenticationFacade.getAuthenticationName(), action, field, value, error, LocalDateTime.now());
   }
 
   /**
    * Логирует системные ошибки
    */
-  public void logSystemError(String username, String operation, Exception exception) {
+  public void logSystemError(String operation, Exception exception) {
     log.error("SYSTEM AUDIT - ERROR: user={}, operation={}, exceptionType={}, exceptionMessage={}, timestamp={}",
-        username, operation, exception.getClass().getSimpleName(), exception.getMessage(), LocalDateTime.now(),
+        authenticationFacade.getAuthenticationName(), operation, exception.getClass().getSimpleName(),
+        exception.getMessage(),
+        LocalDateTime.now(),
         exception);
   }
 
   /**
    * Логирует операцию просмотра баланса карты
    */
-  public void logBalanceView(String username, Long cardId, String maskedCardNumber, BigDecimal balance) {
+  public void logBalanceView(Long cardId, String maskedCardNumber, BigDecimal balance) {
     log.info("BALANCE AUDIT - VIEWED: user={}, cardId={}, maskedCardNumber={}, balance={}, timestamp={}",
-        username, cardId, maskedCardNumber, balance, LocalDateTime.now());
+        authenticationFacade.getAuthenticationName(), cardId, maskedCardNumber, balance, LocalDateTime.now());
   }
 
   /**
    * Логирует операцию просмотра списка карт
    */
-  public void logCardsListView(String username, Integer pageSize, String searchQuery) {
+  public void logCardsListView(Integer pageSize, String searchQuery) {
     log.info("CARDS_LIST AUDIT - VIEWED: user={}, pageSize={}, searchQuery={}, timestamp={}",
-        username, pageSize, searchQuery, LocalDateTime.now());
+        authenticationFacade.getAuthenticationName(), pageSize, searchQuery, LocalDateTime.now());
   }
 
   /**
    * Логирует операцию просмотра списка держателей карт
    */
-  public void logCardholdersListView(String username, Integer pageSize, String searchQuery) {
+  public void logCardholdersListView(Integer pageSize, String searchQuery) {
     log.info("CARDHOLDERS_LIST AUDIT - VIEWED: user={}, pageSize={}, searchQuery={}, timestamp={}",
-        username, pageSize, searchQuery, LocalDateTime.now());
+        authenticationFacade.getAuthenticationName(), pageSize, searchQuery, LocalDateTime.now());
   }
 }

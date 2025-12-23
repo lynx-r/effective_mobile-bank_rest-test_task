@@ -44,6 +44,9 @@ class TransactionServiceImplTest {
   @Mock
   private TransactionRepository transactionRepository;
 
+  @Mock
+  private AuditService auditService;
+
   @InjectMocks
   private TransactionServiceImpl transactionService;
 
@@ -272,18 +275,11 @@ class TransactionServiceImplTest {
     void shouldHandleTransferToSameCard() {
       // Given
       InternalTransferRequest request = new InternalTransferRequest(1L, 1L, BigDecimal.valueOf(50.00));
-      when(cardRepository.findByIdAndOwner_Username(1L, "testuser")).thenReturn(Optional.of(fromCard));
 
-      // When
-      // Перевод на ту же карту проходит успешно - баланс уменьшается и увеличивается
-      // на ту же сумму
-      transactionService.transferBetweenOwnCards("testuser", request);
-
-      // Then
-      // Баланс остается неизменным: 1000 - 50 + 50 = 1000
-      assertEquals(BigDecimal.valueOf(1000.00), fromCard.getBalance());
-
-      verify(transactionRepository).save(any(Transaction.class));
+      // When & Then
+      assertThrows(IllegalArgumentException.class,
+          () -> transactionService.transferBetweenOwnCards("testuser", request));
+      verify(transactionRepository, never()).save(any());
     }
 
     @Test
@@ -311,6 +307,7 @@ class TransactionServiceImplTest {
       InternalTransferRequest request = new InternalTransferRequest(1L, 2L, BigDecimal.valueOf(-50.00));
       when(cardRepository.findByIdAndOwner_Username(1L, "testuser")).thenReturn(Optional.of(fromCard));
       when(cardRepository.findByIdAndOwner_Username(2L, "testuser")).thenReturn(Optional.of(toCard));
+      when(transactionRepository.save(any(Transaction.class))).thenReturn(testTransaction);
 
       // When & Then
       // С отрицательной суммой перевод должен пройти успешно, так как баланс

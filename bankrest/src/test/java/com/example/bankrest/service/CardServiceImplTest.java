@@ -69,7 +69,7 @@ class CardServiceImplTest {
   private AuditService auditService;
 
   @InjectMocks
-  private CardServiceImpl cardService;
+  private CardholderCardServiceImpl cardService;
 
   private Cardholder testOwner;
   private Card testCard1;
@@ -192,16 +192,14 @@ class CardServiceImplTest {
     // Given
     when(cardRepository.findById(1L)).thenReturn(Optional.of(testCard1));
     doNothing().when(auditService).logCardStatusChange(anyString(), anyLong(), anyString(), anyString());
-    when(cardRepository.save(any(Card.class))).thenReturn(testCard1);
-    doNothing().when(auditService).logCardStatusChange(anyString(), anyLong(), anyString(), anyString());
 
     // When
     cardService.updateStatus(1L, CardStatus.BLOCKED);
 
     // Then
     verify(cardRepository).findById(1L);
-    verify(cardRepository).save(testCard1);
-    verify(auditService).logCardStatusChange("ADMIN", 1L, "ACTIVE", "BLOCKED");
+    verify(auditService).logCardStatusChange("admin", 1L, "ACTIVE", "BLOCKED");
+    assertEquals(CardStatus.BLOCKED, testCard1.getStatus());
   }
 
   @Test
@@ -221,28 +219,28 @@ class CardServiceImplTest {
   @Test
   void deleteCard_ShouldDeleteCardSuccessfully() {
     // Given
-    when(cardRepository.existsById(1L)).thenReturn(true);
-    doNothing().when(cardRepository).deleteById(1L);
+    when(cardRepository.findById(1L)).thenReturn(Optional.of(testCard1));
+    doNothing().when(auditService).logCardDeletion(anyString(), anyLong(), anyString());
 
     // When
     cardService.deleteCard(1L);
 
     // Then
-    verify(cardRepository).existsById(1L);
+    verify(cardRepository).findById(1L);
     verify(cardRepository).deleteById(1L);
   }
 
   @Test
   void deleteCard_ShouldThrowEntityNotFoundException_WhenCardNotFound() {
     // Given
-    when(cardRepository.existsById(1L)).thenReturn(false);
+    when(cardRepository.findById(1L)).thenReturn(Optional.empty());
 
     // When & Then
     EntityNotFoundException exception = assertThrows(EntityNotFoundException.class,
         () -> cardService.deleteCard(1L));
 
     assertEquals("Карта не найдена", exception.getMessage());
-    verify(cardRepository).existsById(1L);
+    verify(cardRepository).findById(1L);
     verify(cardRepository, never()).deleteById(anyLong());
   }
 
@@ -260,16 +258,13 @@ class CardServiceImplTest {
       testCard1.setStatus(CardStatus.BLOCKED);
       when(cardRepository.findById(1L)).thenReturn(Optional.of(testCard1));
       doNothing().when(auditService).logCardStatusChange(anyString(), anyLong(), anyString(), anyString());
-      when(cardRepository.save(any(Card.class))).thenReturn(testCard1);
-      doNothing().when(auditService).logCardStatusChange(anyString(), anyLong(), anyString(), anyString());
 
       // When
       cardService.updateStatus(1L, CardStatus.ACTIVE);
 
       // Then
       verify(cardRepository).findById(1L);
-      verify(cardRepository).save(testCard1);
-      verify(auditService).logCardStatusChange("ADMIN", 1L, "BLOCKED", "ACTIVE");
+      verify(auditService).logCardStatusChange("admin", 1L, "BLOCKED", "ACTIVE");
       assertEquals(CardStatus.ACTIVE, testCard1.getStatus());
     }
 
@@ -280,16 +275,13 @@ class CardServiceImplTest {
       testCard1.setStatus(CardStatus.EXPIRED);
       when(cardRepository.findById(1L)).thenReturn(Optional.of(testCard1));
       doNothing().when(auditService).logCardStatusChange(anyString(), anyLong(), anyString(), anyString());
-      when(cardRepository.save(any(Card.class))).thenReturn(testCard1);
-      doNothing().when(auditService).logCardStatusChange(anyString(), anyLong(), anyString(), anyString());
 
       // When
       cardService.updateStatus(1L, CardStatus.BLOCKED);
 
       // Then
       verify(cardRepository).findById(1L);
-      verify(cardRepository).save(testCard1);
-      verify(auditService).logCardStatusChange("ADMIN", 1L, "EXPIRED", "BLOCKED");
+      verify(auditService).logCardStatusChange("admin", 1L, "EXPIRED", "BLOCKED");
       assertEquals(CardStatus.BLOCKED, testCard1.getStatus());
     }
 
@@ -300,16 +292,13 @@ class CardServiceImplTest {
       testCard1.setStatus(CardStatus.ACTIVE);
       when(cardRepository.findById(1L)).thenReturn(Optional.of(testCard1));
       doNothing().when(auditService).logCardStatusChange(anyString(), anyLong(), anyString(), anyString());
-      when(cardRepository.save(any(Card.class))).thenReturn(testCard1);
-      doNothing().when(auditService).logCardStatusChange(anyString(), anyLong(), anyString(), anyString());
 
       // When - (should still work setting to same status)
       cardService.updateStatus(1L, CardStatus.ACTIVE);
 
       // Then
       verify(cardRepository).findById(1L);
-      verify(cardRepository).save(testCard1);
-      verify(auditService).logCardStatusChange("ADMIN", 1L, "ACTIVE", "ACTIVE");
+      verify(auditService).logCardStatusChange("admin", 1L, "ACTIVE", "ACTIVE");
       assertEquals(CardStatus.ACTIVE, testCard1.getStatus());
     }
   }
@@ -333,7 +322,6 @@ class CardServiceImplTest {
 
       // Then
       verify(cardRepository).findById(1L);
-      verify(cardRepository).save(testCard1);
       assertEquals(BigDecimal.valueOf(-100.00), testCard1.getBalance());
     }
 
@@ -351,7 +339,6 @@ class CardServiceImplTest {
 
       // Then
       verify(cardRepository).findById(1L);
-      verify(cardRepository).save(testCard1);
       assertEquals(BigDecimal.ZERO, testCard1.getBalance());
     }
 
@@ -369,7 +356,6 @@ class CardServiceImplTest {
 
       // Then
       verify(cardRepository).findById(1L);
-      verify(cardRepository).save(testCard1);
       assertEquals(new BigDecimal("999999999.99"), testCard1.getBalance());
     }
 
@@ -387,7 +373,6 @@ class CardServiceImplTest {
 
       // Then
       verify(cardRepository).findById(1L);
-      verify(cardRepository).save(testCard1);
       assertTrue(testCard1.getExpiryDate().isBefore(LocalDate.now()));
     }
   }
@@ -403,6 +388,7 @@ class CardServiceImplTest {
       // Given
       CreateCardRequest request = new CreateCardRequest(1L);
       when(cardholderRepository.findById(1L)).thenReturn(Optional.of(testOwner));
+      when(cardConfig.getBin()).thenReturn("123456");
       when(cardCryptoUtil.maskCardNumber(any(String.class))).thenReturn("**** **** **** 1234");
       when(cardCryptoUtil.encrypt(any(String.class))).thenReturn("encrypted_123456");
       when(cardRepository.save(any(Card.class))).thenThrow(new RuntimeException("Database constraint violation"));
@@ -436,7 +422,7 @@ class CardServiceImplTest {
     @DisplayName("Should handle concurrent modification during card deletion")
     void shouldHandleConcurrentModificationDuringCardDeletion() {
       // Given
-      when(cardRepository.existsById(1L)).thenReturn(true);
+      when(cardRepository.findById(1L)).thenReturn(Optional.of(testCard1));
       doThrow(new RuntimeException("Concurrent modification")).when(cardRepository).deleteById(1L);
 
       // When & Then
@@ -444,7 +430,7 @@ class CardServiceImplTest {
           () -> cardService.deleteCard(1L));
 
       assertEquals("Concurrent modification", exception.getMessage());
-      verify(cardRepository).existsById(1L);
+      verify(cardRepository).findById(1L);
       verify(cardRepository).deleteById(1L);
     }
   }
@@ -510,6 +496,7 @@ class CardServiceImplTest {
       // Given
       CreateCardRequest request = new CreateCardRequest(1L);
       when(cardholderRepository.findById(1L)).thenReturn(Optional.of(testOwner));
+      when(cardConfig.getBin()).thenReturn("123456");
       when(cardCryptoUtil.maskCardNumber(any(String.class))).thenReturn("**** **** **** 1234");
       when(cardCryptoUtil.encrypt(any(String.class))).thenReturn("encrypted_123456");
       when(cardRepository.save(any(Card.class))).thenReturn(testCard1);
@@ -574,7 +561,7 @@ class CardServiceImplTest {
         when(cardRepository.findByOwner_Username(eq("user1"), any(Pageable.class))).thenReturn(cardPage);
 
         // When
-        Page<CardResponse> result = cardService.findUserCards("user1", null, pageable);
+        Page<CardResponse> result = cardService.findCardholderCards("user1", null, pageable);
 
         // Then
         assertEquals(2, result.getContent().size());
@@ -594,7 +581,7 @@ class CardServiceImplTest {
         when(cardRepository.findByUserWithFilter("user1", "1234", pageable)).thenReturn(cardPage);
 
         // When
-        Page<CardResponse> result = cardService.findUserCards("user1", "1234", pageable);
+        Page<CardResponse> result = cardService.findCardholderCards("user1", "1234", pageable);
 
         // Then
         assertEquals(1, result.getContent().size());
@@ -613,7 +600,7 @@ class CardServiceImplTest {
         when(cardRepository.findByOwner_Username(eq("user1"), any(Pageable.class))).thenReturn(cardPage);
 
         // When
-        Page<CardResponse> result = cardService.findUserCards("user1", "", pageable);
+        Page<CardResponse> result = cardService.findCardholderCards("user1", "", pageable);
 
         // Then
         assertEquals(2, result.getContent().size());
@@ -632,7 +619,7 @@ class CardServiceImplTest {
         when(cardRepository.findByOwner_Username(eq("user1"), any(Pageable.class))).thenReturn(cardPage);
 
         // When
-        Page<CardResponse> result = cardService.findUserCards("user1", "   ", pageable);
+        Page<CardResponse> result = cardService.findCardholderCards("user1", "   ", pageable);
 
         // Then
         assertEquals(2, result.getContent().size());
@@ -652,7 +639,7 @@ class CardServiceImplTest {
         when(cardRepository.findByOwner_Username("user1", expectedPageable)).thenReturn(cardPage);
 
         // When
-        Page<CardResponse> result = cardService.findUserCards("user1", null, unsortedPageable);
+        Page<CardResponse> result = cardService.findCardholderCards("user1", null, unsortedPageable);
 
         // Then
         assertEquals(1, result.getContent().size());
@@ -670,7 +657,7 @@ class CardServiceImplTest {
         when(cardRepository.findByOwner_Username("user1", customSortedPageable)).thenReturn(cardPage);
 
         // When
-        Page<CardResponse> result = cardService.findUserCards("user1", null, customSortedPageable);
+        Page<CardResponse> result = cardService.findCardholderCards("user1", null, customSortedPageable);
 
         // Then
         assertEquals(1, result.getContent().size());
@@ -687,7 +674,7 @@ class CardServiceImplTest {
         when(cardRepository.findByOwner_Username(eq("user1"), any(Pageable.class))).thenReturn(emptyPage);
 
         // When
-        Page<CardResponse> result = cardService.findUserCards("user1", null, pageable);
+        Page<CardResponse> result = cardService.findCardholderCards("user1", null, pageable);
 
         // Then
         assertEquals(0, result.getContent().size());
@@ -707,7 +694,7 @@ class CardServiceImplTest {
             PageRequest.of(1, 5, Sort.by("createdAt").descending()))).thenReturn(cardPage);
 
         // When
-        Page<CardResponse> result = cardService.findUserCards("user1", null,
+        Page<CardResponse> result = cardService.findCardholderCards("user1", null,
             PageRequest.of(1, 5, Sort.by("createdAt").descending()));
 
         // Then
@@ -728,7 +715,6 @@ class CardServiceImplTest {
       void shouldSuccessfullyBlockOwnCard() {
         // Given
         when(cardRepository.findByIdAndOwner_Username(1L, "user1")).thenReturn(Optional.of(testCard1));
-        when(cardRepository.save(any(Card.class))).thenReturn(testCard1);
 
         // When
         cardService.blockOwnCard("user1", 1L);
@@ -736,7 +722,6 @@ class CardServiceImplTest {
         // Then
         assertEquals(CardStatus.BLOCKED, testCard1.getStatus());
         verify(cardRepository).findByIdAndOwner_Username(1L, "user1");
-        verify(cardRepository).save(testCard1);
       }
 
       @Test
@@ -787,7 +772,6 @@ class CardServiceImplTest {
         // Given
         testCard1.setStatus(CardStatus.BLOCKED);
         when(cardRepository.findByIdAndOwner_Username(1L, "user1")).thenReturn(Optional.of(testCard1));
-        when(cardRepository.save(any(Card.class))).thenReturn(testCard1);
 
         // When
         cardService.blockOwnCard("user1", 1L);
@@ -795,7 +779,6 @@ class CardServiceImplTest {
         // Then
         assertEquals(CardStatus.BLOCKED, testCard1.getStatus());
         verify(cardRepository).findByIdAndOwner_Username(1L, "user1");
-        verify(cardRepository).save(testCard1);
       }
 
       @Test
@@ -803,7 +786,6 @@ class CardServiceImplTest {
       void shouldPreserveOtherCardFieldsWhenBlocking() {
         // Given
         when(cardRepository.findByIdAndOwner_Username(1L, "user1")).thenReturn(Optional.of(testCard1));
-        when(cardRepository.save(any(Card.class))).thenReturn(testCard1);
 
         // When
         cardService.blockOwnCard("user1", 1L);
@@ -828,7 +810,7 @@ class CardServiceImplTest {
         when(cardRepository.findByIdAndOwner_Username(1L, "user1")).thenReturn(Optional.of(testCard1));
 
         // When
-        BigDecimal result = cardService.getUserCardBalance("user1", 1L);
+        BigDecimal result = cardService.getCardholderCardBalance("user1", 1L);
 
         // Then
         assertEquals(BigDecimal.valueOf(1000.50), result);
@@ -843,7 +825,7 @@ class CardServiceImplTest {
         when(cardRepository.findByIdAndOwner_Username(1L, "user1")).thenReturn(Optional.of(testCard1));
 
         // When
-        BigDecimal result = cardService.getUserCardBalance("user1", 1L);
+        BigDecimal result = cardService.getCardholderCardBalance("user1", 1L);
 
         // Then
         assertEquals(BigDecimal.ZERO, result);
@@ -858,7 +840,7 @@ class CardServiceImplTest {
         when(cardRepository.findByIdAndOwner_Username(1L, "user1")).thenReturn(Optional.of(testCard1));
 
         // When
-        BigDecimal result = cardService.getUserCardBalance("user1", 1L);
+        BigDecimal result = cardService.getCardholderCardBalance("user1", 1L);
 
         // Then
         assertEquals(BigDecimal.valueOf(-250.75), result);
@@ -873,7 +855,7 @@ class CardServiceImplTest {
         when(cardRepository.findByIdAndOwner_Username(1L, "user1")).thenReturn(Optional.of(testCard1));
 
         // When
-        BigDecimal result = cardService.getUserCardBalance("user1", 1L);
+        BigDecimal result = cardService.getCardholderCardBalance("user1", 1L);
 
         // Then
         assertEquals(new BigDecimal("999999999.99"), result);
@@ -888,7 +870,7 @@ class CardServiceImplTest {
 
         // When & Then
         AccessDeniedException exception = assertThrows(AccessDeniedException.class,
-            () -> cardService.getUserCardBalance("user1", 1L));
+            () -> cardService.getCardholderCardBalance("user1", 1L));
 
         assertEquals("Доступ запрещен", exception.getMessage());
         verify(cardRepository).findByIdAndOwner_Username(1L, "user1");
@@ -914,7 +896,7 @@ class CardServiceImplTest {
 
         // When & Then
         AccessDeniedException exception = assertThrows(AccessDeniedException.class,
-            () -> cardService.getUserCardBalance("user1", 2L));
+            () -> cardService.getCardholderCardBalance("user1", 2L));
 
         assertEquals("Доступ запрещен", exception.getMessage());
         verify(cardRepository).findByIdAndOwner_Username(2L, "user1");
@@ -928,7 +910,7 @@ class CardServiceImplTest {
         when(cardRepository.findByIdAndOwner_Username(1L, "user1")).thenReturn(Optional.of(testCard1));
 
         // When
-        BigDecimal result = cardService.getUserCardBalance("user1", 1L);
+        BigDecimal result = cardService.getCardholderCardBalance("user1", 1L);
 
         // Then
         assertEquals(BigDecimal.valueOf(1000.50), result);
@@ -954,7 +936,7 @@ class CardServiceImplTest {
       when(cardRepository.findByOwner_Username(eq("user1"), any(Pageable.class))).thenReturn(cardPage);
 
       // When
-      Page<CardResponse> result = cardService.findUserCards("user1", null, pageable);
+      Page<CardResponse> result = cardService.findCardholderCards("user1", null, pageable);
 
       // Then
       assertEquals(1, result.getContent().size());
@@ -973,7 +955,7 @@ class CardServiceImplTest {
       when(cardRepository.findByUserWithFilter(eq("user1"), anyString(), any(Pageable.class))).thenReturn(cardPage);
 
       // When
-      Page<CardResponse> result = cardService.findUserCards("user1", longSearch, pageable);
+      Page<CardResponse> result = cardService.findCardholderCards("user1", longSearch, pageable);
 
       // Then
       assertEquals(0, result.getContent().size());
@@ -992,7 +974,7 @@ class CardServiceImplTest {
       when(cardRepository.findByUserWithFilter(eq("user1"), anyString(), any(Pageable.class))).thenReturn(cardPage);
 
       // When
-      Page<CardResponse> result = cardService.findUserCards("user1", specialSearch, pageable);
+      Page<CardResponse> result = cardService.findCardholderCards("user1", specialSearch, pageable);
 
       // Then
       assertEquals(1, result.getContent().size());
@@ -1021,7 +1003,7 @@ class CardServiceImplTest {
 
       // When & Then
       AccessDeniedException exception = assertThrows(AccessDeniedException.class,
-          () -> cardService.getUserCardBalance("user1", -1L));
+          () -> cardService.getCardholderCardBalance("user1", -1L));
 
       assertEquals("Доступ запрещен", exception.getMessage());
       verify(cardRepository).findByIdAndOwner_Username(-1L, "user1");
@@ -1072,7 +1054,7 @@ class CardServiceImplTest {
       when(cardRepository.findByOwner_Username(eq("user2"), any(Pageable.class))).thenReturn(cardPage);
 
       // When
-      Page<CardResponse> result = cardService.findUserCards("user2", null, pageable);
+      Page<CardResponse> result = cardService.findCardholderCards("user2", null, pageable);
 
       // Then - should only return user2's cards, not user1's
       assertEquals(1, result.getContent().size());
@@ -1104,7 +1086,7 @@ class CardServiceImplTest {
 
       // When & Then
       AccessDeniedException exception = assertThrows(AccessDeniedException.class,
-          () -> cardService.getUserCardBalance("user1", 2L));
+          () -> cardService.getCardholderCardBalance("user1", 2L));
 
       assertEquals("Доступ запрещен", exception.getMessage());
       verify(cardRepository).findByIdAndOwner_Username(2L, "user1");
@@ -1143,7 +1125,7 @@ class CardServiceImplTest {
           PageRequest.of(0, 100, Sort.by("createdAt").descending()))).thenReturn(cardPage);
 
       // When
-      Page<CardResponse> result = cardService.findUserCards("user1", null,
+      Page<CardResponse> result = cardService.findCardholderCards("user1", null,
           PageRequest.of(0, 100, Sort.by("createdAt").descending()));
 
       // Then
@@ -1170,9 +1152,9 @@ class CardServiceImplTest {
           PageRequest.of(1, 1, Sort.by("createdAt").descending()))).thenReturn(page2);
 
       // When
-      Page<CardResponse> result1 = cardService.findUserCards("user1", null,
+      Page<CardResponse> result1 = cardService.findCardholderCards("user1", null,
           PageRequest.of(0, 1, Sort.by("createdAt").descending()));
-      Page<CardResponse> result2 = cardService.findUserCards("user1", null,
+      Page<CardResponse> result2 = cardService.findCardholderCards("user1", null,
           PageRequest.of(1, 1, Sort.by("createdAt").descending()));
 
       // Then

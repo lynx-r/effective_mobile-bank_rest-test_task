@@ -14,6 +14,12 @@ databaseChangeLog:
                   name: email
                   value: admin@bankrest.com
               - column:
+                  name: first_name
+                  value: Admin
+              - column:
+                  name: last_name
+                  value: User
+              - column:
                   name: password
                   value: $2a$10$BkFJP4p8TrvOdmrtgKyNUOf7k6RKss8Udu6Win6CQ0g5loILniVvm
                   # Это хэш для пароля "admin123"
@@ -31,6 +37,12 @@ databaseChangeLog:
               - column:
                   name: email
                   value: user1@example.com
+              - column:
+                  name: first_name
+                  value: John
+              - column:
+                  name: last_name
+                  value: Doe
               - column:
                   name: password
                   value: $2a$10$BkFJP4p8TrvOdmrtgKyNUOf7k6RKss8Udu6Win6CQ0g5loILniVvm

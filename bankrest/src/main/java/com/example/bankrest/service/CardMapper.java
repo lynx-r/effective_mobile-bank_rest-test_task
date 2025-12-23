@@ -8,6 +8,7 @@ public class CardMapper {
     Long ownerId = card.getOwner() != null ? card.getOwner().getId() : null;
     return new CardResponse(
         card.getId(),
+        card.getOwnerName(),
         card.getCardNumberMasked(),
         card.getStatus(),
         card.getBalance(),

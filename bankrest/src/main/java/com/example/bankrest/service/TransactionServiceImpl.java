@@ -21,20 +21,23 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class TransactionServiceImpl implements TransactionService {
 
+  private final AuthenticationFacade authenticationFacade;
   private final CardRepository cardRepository;
   private final TransactionRepository transactionRepository;
   private final AuditService auditService;
 
   @Override
-  public void transferBetweenOwnCards(String username, InternalTransferRequest request) {
+  public void transferBetweenOwnCards(InternalTransferRequest request) {
     if (request.fromCardId().equals(request.toCardId())) {
       throw new IllegalArgumentException("Нельзя переводить средства на ту же карту");
     }
 
-    Card fromCard = cardRepository.findByIdAndOwner_Username(request.fromCardId(), username)
+    Card fromCard = cardRepository
+        .findByIdAndOwner_Username(request.fromCardId(), authenticationFacade.getAuthenticationName())
         .orElseThrow(() -> new EntityNotFoundException("Карта списания не найдена"));
 
-    Card toCard = cardRepository.findByIdAndOwner_Username(request.toCardId(), username)
+    Card toCard = cardRepository.findByIdAndOwner_Username(request.toCardId(), authenticationFacade
+        .getAuthenticationName())
         .orElseThrow(() -> new EntityNotFoundException("Карта зачисления не найдена"));
 
     if (fromCard.getStatus() != CardStatus.ACTIVE) {
@@ -61,11 +64,13 @@ public class TransactionServiceImpl implements TransactionService {
     Transaction savedTx = transactionRepository.save(tx);
 
     // Аудит перевода денег
-    auditService.logTransfer(username, fromCard.getId(), toCard.getId(),
+    auditService.logTransfer(fromCard.getId(), toCard.getId(),
         fromCard.getCardNumberMasked(), toCard.getCardNumberMasked(),
         request.amount().toString(), "RUB");
     log.debug("Transfer completed successfully. User: {}, From Card: {}, To Card: {}, Amount: {}, Transaction ID: {}",
-        username, fromCard.getCardNumberMasked(), toCard.getCardNumberMasked(),
+        authenticationFacade
+            .getAuthenticationName(),
+        fromCard.getCardNumberMasked(), toCard.getCardNumberMasked(),
         request.amount(), savedTx.getId());
   }
 }
