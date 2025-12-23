@@ -64,7 +64,7 @@ public class TransactionServiceImpl implements TransactionService {
     auditService.logTransfer(username, fromCard.getId(), toCard.getId(),
         fromCard.getCardNumberMasked(), toCard.getCardNumberMasked(),
         request.amount().toString(), "RUB");
-    log.info("Transfer completed successfully. User: {}, From Card: {}, To Card: {}, Amount: {}, Transaction ID: {}",
+    log.debug("Transfer completed successfully. User: {}, From Card: {}, To Card: {}, Amount: {}, Transaction ID: {}",
         username, fromCard.getCardNumberMasked(), toCard.getCardNumberMasked(),
         request.amount(), savedTx.getId());
   }

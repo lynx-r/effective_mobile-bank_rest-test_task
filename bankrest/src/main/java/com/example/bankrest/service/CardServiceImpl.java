@@ -46,7 +46,7 @@ public class CardServiceImpl implements CardService {
         .toList();
 
     auditService.logCardsListView("admin", null, "findAll");
-    log.info("Admin requested list of all cards. Total cards: {}", cards.size());
+    log.debug("Admin requested list of all cards. Total cards: {}", cards.size());
     return cards;
   }
 
@@ -71,7 +71,7 @@ public class CardServiceImpl implements CardService {
 
     // Аудит создания карты
     auditService.logCardCreation("admin", card.getId(), card.getCardNumberMasked(), owner.getId());
-    log.info("Card created successfully. Card ID: {}, Masked Number: {}, Owner ID: {}",
+    log.debug("Card created successfully. Card ID: {}, Masked Number: {}, Owner ID: {}",
         card.getId(), card.getCardNumberMasked(), owner.getId());
 
     return response;
@@ -89,7 +89,7 @@ public class CardServiceImpl implements CardService {
 
     // Аудит изменения статуса карты
     auditService.logCardStatusChange("admin", card.getId(), previousStatus.name(), status.name());
-    log.warn("Card status updated. Card ID: {}, Previous Status: {}, New Status: {}",
+    log.debug("Card status updated. Card ID: {}, Previous Status: {}, New Status: {}",
         card.getId(), previousStatus, status);
   }
 
@@ -102,7 +102,7 @@ public class CardServiceImpl implements CardService {
     }
     var card = cardOptional.get();
     auditService.logCardDeletion("admin", id, card.getCardNumberMasked());
-    log.warn("Card deleted. Card ID: {}, maskedCardNumber: {}", id, card.getCardNumberMasked());
+    log.debug("Card deleted. Card ID: {}, maskedCardNumber: {}", id, card.getCardNumberMasked());
     cardRepository.deleteById(id);
   }
 
@@ -117,13 +117,13 @@ public class CardServiceImpl implements CardService {
 
     if (cleanSearch == null || cleanSearch.isEmpty()) {
       auditService.logCardsListView("admin", sortedPageable.getPageSize(), "findByOwner_Username");
-      log.info("User requested list of cards. Page size: {}", sortedPageable.getPageSize());
+      log.debug("User requested list of cards. Page size: {}", sortedPageable.getPageSize());
       return cardRepository.findByOwner_Username(username,
           sortedPageable).map(CardMapper::mapToResponse);
     }
 
     auditService.logCardsListView("admin", sortedPageable.getPageSize(), "findByUserWithFilter");
-    log.info("User requested list of cards with filter. Search: {}, Page size: {}", cleanSearch,
+    log.debug("User requested list of cards with filter. Search: {}, Page size: {}", cleanSearch,
         sortedPageable.getPageSize());
     return cardRepository.findByUserWithFilter(username, cleanSearch, sortedPageable).map(CardMapper::mapToResponse);
   }
@@ -135,7 +135,7 @@ public class CardServiceImpl implements CardService {
         .orElseThrow(() -> new AccessDeniedException("Карта не найдена или не принадлежит вам"));
 
     if (card.getStatus() == CardStatus.BLOCKED) {
-      log.info("User {} attempted to block already blocked card {}", username, cardId);
+      log.debug("User {} attempted to block already blocked card {}", username, cardId);
       return;
     }
 
@@ -145,7 +145,7 @@ public class CardServiceImpl implements CardService {
 
     // Аудит блокировки карты пользователем
     auditService.logCardBlocking(username, card.getId(), card.getCardNumberMasked());
-    log.warn("Card blocked by user. Username: {}, Card ID: {}, Masked Number: {}, Previous Status: {}",
+    log.debug("Card blocked by user. Username: {}, Card ID: {}, Masked Number: {}, Previous Status: {}",
         username, card.getId(), card.getCardNumberMasked(), previousStatus);
   }
 
@@ -155,7 +155,7 @@ public class CardServiceImpl implements CardService {
         .map((card) -> {
           BigDecimal balance = card.getBalance();
           auditService.logBalanceView("user", cardId, card.getCardNumberMasked(), card.getBalance());
-          log.info("User requested balance. Username: {}, Card ID: {}, Masked Number: {}, Balance: {}",
+          log.debug("User requested balance. Username: {}, Card ID: {}, Masked Number: {}, Balance: {}",
               username, card.getId(), card.getCardNumberMasked(), balance);
           return balance;
         })

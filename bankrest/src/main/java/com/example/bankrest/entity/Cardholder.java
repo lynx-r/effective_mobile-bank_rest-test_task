@@ -12,6 +12,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Table(name = "cardholders")
@@ -30,9 +32,13 @@ public class Cardholder {
   @Column(name = "email", unique = true)
   private String email;
 
+  @NotNull
+  @NotBlank
   @Column(name = "first_name")
   private String firstName;
 
+  @NotNull
+  @NotBlank
   @Column(name = "last_name")
   private String lastName;
 

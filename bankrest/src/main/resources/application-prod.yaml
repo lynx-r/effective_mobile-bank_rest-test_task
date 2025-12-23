@@ -62,7 +62,6 @@ logging:
 # Production настройки Kafka
 kafka:
   consumer:
-    group-id: bankrest-prod-group
     auto-offset-reset: earliest
     enable-auto-commit: false
     properties:
