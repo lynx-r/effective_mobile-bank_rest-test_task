@@ -1,9 +1,10 @@
-# Production конфигурация для BankRest
 spring:
   config:
     activate:
       on-profile: prod
-  
+
+  application:
+    name: AuthorizationServer
   # Production настройки БД с HikariCP
   datasource:
     hikari:
@@ -32,7 +33,7 @@ spring:
     type: caffeine
     caffeine:
       spec: maximumSize=1000,expireAfterWrite=30m,recordStats
-
+  
 # Production настройки сервера
 server:
   compression:
@@ -44,7 +45,7 @@ server:
 logging:
   level:
     root: WARN
-    "[com.example.bankrest]": INFO
+    "[com.example.authorizationserver": INFO
     "[org.springframework.security]": WARN
     "[org.hibernate.SQL]": WARN
     "[org.springframework.web]": WARN
@@ -58,35 +59,3 @@ logging:
     name: ${LOG_FILE_PATH:/var/log/bankrest/application.log}
     max-size: ${LOG_FILE_MAX_SIZE:100MB}
     max-history: ${LOG_FILE_MAX_HISTORY:30}
-
-# Production настройки Kafka
-kafka:
-  consumer:
-    group-id: bankrest-prod-group
-    auto-offset-reset: earliest
-    enable-auto-commit: false
-    properties:
-      spring.json.trusted.packages: "com.example.common.*"
-  producer:
-    acks: all
-    retries: 3
-    batch-size: 16384
-    buffer-memory: 33554432
-
-# Production настройки Actuator (мониторинг)
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,metrics,prometheus
-      base-path: /actuator
-  endpoint:
-    health:
-      show-details: when-authorized
-  prometheus:
-    metrics:
-      export:
-        enabled: true
-  info:
-    env:
-      enabled: true

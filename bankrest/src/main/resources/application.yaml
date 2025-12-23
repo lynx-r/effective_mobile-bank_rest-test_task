@@ -6,7 +6,7 @@ spring:
   application:
     name: BankRest
   datasource:
-    url: jdbc:postgresql://localhost:5432/bankrest_db
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/bankrest_db}
     username: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD:password}
     driver-class-name: org.postgresql.Driver
@@ -26,21 +26,22 @@ spring:
       client:
         registration:
           oidc-client:
-            client-id: oidc-client
-            client-authentication-method: none
-            authorization-grant-type: authorization_code
+            client-id: "oidc-client"
+            client-name: "oidc-client"
+            client-authentication-method: "none"
+            authorization-grant-type: "authorization_code"
             redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
             scope: 
-              - openid
-              - profile
-              - email
-              - read
+              - "openid"
+              - "profile"
+              - "email"
+              - "read"
         provider:
           oidc-client:
-            issuer-uri: ${OAUTH2_PROVIDER:http://auth-server:9000}
+            issuer-uri: ${OAUTH2_ISSUER_URI:http://auth-server:9000}
       resourceserver:
         jwt:
-          issuer-uri: ${OAUTH2_PROVIDER:http://auth-server:9000}
+          issuer-uri: ${OAUTH2_ISSUER_URI:http://auth-server:9000}
   kafka:
     consumer:
       group-id: bankrest-group
@@ -65,7 +66,6 @@ bank:
     bin: ${CARD_BIN:444455}
   crypto:
     encryption-key: ${CRYPTO_ENCRYPTION_KEY:DevKey1234567890123456789012abcd} # 32 chars для AES-256
-    # ВАЖНО: Для production используйте переменную окружения CRYPTO_ENCRYPTION_KEY
 
 logging:
   level:

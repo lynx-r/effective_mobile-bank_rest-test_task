@@ -3,7 +3,7 @@ spring:
   application:
     name: AuthorizationServer
   datasource:
-    url: jdbc:postgresql://localhost:5432/authorization_db
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/authorization_db}
     username: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD:password}
     driver-class-name: org.postgresql.Driver
@@ -32,17 +32,18 @@ spring:
                 - "authorization_code"
                 - "refresh_token"
               redirect-uris:
-                - "http://client-app:8080/login/oauth2/code/oidc-client"
+                - ${CLIENT_APP_LOGIN_REDIRECT_URL:http://client-app:8080/login/oauth2/code/oidc-client}
               post-logout-redirect-uris:
-                - "http://client-app:8080/login?logout"
+                - ${CLIENT_APP_LOGOUT_REDIRECT_URL:http://client-app:8080/login?logout}
               scopes:
                 - "openid"
                 - "profile"
                 - "email"
                 - "read"
-            # require-authorization-consent: true
+            require-authorization-consent: true
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: 
+      - ${KAFKA_SERVER:localhost:9092}
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer      
@@ -59,7 +60,7 @@ server:
     session:
       tracking-modes: cookie
       cookie:
-        name: AUTH_SERVER_SESSIONID
+        name: AUTHORIZATION_SERVER_SESSIONID
 
 logging:
   level:
