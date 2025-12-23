@@ -12,6 +12,8 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.jwt.JwtEncoder;
+import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.authorization.OAuth2TokenType;
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
 import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext;
@@ -33,12 +35,11 @@ public class AppSecurityConfig {
   @Order(1)
   SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http)
       throws Exception {
-
     http
         .oauth2AuthorizationServer((authorizationServer) -> {
           http.securityMatcher(authorizationServer.getEndpointsMatcher());
           authorizationServer
-              .oidc(Customizer.withDefaults()); // Enable OpenID Connect 1.0
+              .oidc(oidc -> oidc.logoutEndpoint(Customizer.withDefaults()));
         })
         // настройте его)
         .authorizeHttpRequests((authorize) -> authorize
@@ -100,13 +101,20 @@ public class AppSecurityConfig {
   }
 
   @Bean
-  PasswordEncoder passwordEncoder() {
-    return new BCryptPasswordEncoder();
+  public JwtEncoder jwtEncoder(JWKSource<SecurityContext> jwkSource) {
+    return new NimbusJwtEncoder(jwkSource);
   }
 
   @Bean
-  AuthorizationServerSettings authorizationServerSettings() {
-    return AuthorizationServerSettings.builder().build();
+  public AuthorizationServerSettings authorizationServerSettings() {
+    return AuthorizationServerSettings.builder()
+        .issuer("http://auth-server:9000")
+        .build();
+  }
+
+  @Bean
+  PasswordEncoder passwordEncoder() {
+    return new BCryptPasswordEncoder();
   }
 
   @Bean

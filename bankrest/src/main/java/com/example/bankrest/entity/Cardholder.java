@@ -12,7 +12,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import lombok.Builder;
 import lombok.Data;
 
 @Table(name = "cardholders")
@@ -46,7 +45,6 @@ public class Cardholder {
   @Column(name = "updated_at", nullable = true)
   private LocalDateTime updatedAt;
 
-  @Builder.Default
   @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
   private List<Card> cards = new ArrayList<>();
 

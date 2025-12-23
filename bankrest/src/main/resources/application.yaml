@@ -58,7 +58,7 @@ server:
   servlet:
     session:
       cookie:
-        name: BANK_CLIENT_SESSION
+        name: BANKREST_CLIENT_SESSION
 
 bank:
   card:

@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.bankrest.dto.CardResponse;
@@ -34,6 +35,16 @@ public class CardholderCardController {
 
   private final CardService cardService;
   private final TransactionService transactionService;
+
+  @GetMapping("/debug")
+  @ResponseBody
+  public String debug(@AuthenticationPrincipal Object principal) {
+    if (principal instanceof org.springframework.security.oauth2.core.oidc.user.OidcUser oidcUser) {
+      return "ID Token present: " + (oidcUser.getIdToken() != null) +
+          "<br>Logout URI: " + oidcUser.getIdToken().getClaim("iss") + "/connect/logout";
+    }
+    return "Principal is NOT OidcUser. Type: " + principal.getClass().getName();
+  }
 
   // 1. Просмотр своих карт с пагинацией и поиском по маске/номеру
   @GetMapping("/cards")

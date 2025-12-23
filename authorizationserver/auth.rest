@@ -30,6 +30,13 @@ Content-Type: application/json
 }
 ###
 
+# @name OpenId-Config
+GET {{authorizationserver-api}}/.well-known/openid-configuration
+accept: application/json
+Content-Type: application/json
+
+###
+
 GET http://client-app:8080/
 accept: application/json
 Content-Type: application/json
