@@ -1,4 +1,4 @@
 rootProject.name = 'bank_rest'
 include 'common'
 include 'authorizationserver'
-include 'bankrest'
+include 'bankcards'

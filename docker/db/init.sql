@@ -1,1 +1,1 @@
-CREATE DATABASE bankrest_db;
+CREATE DATABASE bankcards_db;

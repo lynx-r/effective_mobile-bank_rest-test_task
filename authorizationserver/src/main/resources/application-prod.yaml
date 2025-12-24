@@ -56,6 +56,6 @@ logging:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
     file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
   file:
-    name: ${LOG_FILE_PATH:/var/log/bankrest/application.log}
+    name: ${LOG_FILE_PATH:/var/log/bankcards/application.log}
     max-size: ${LOG_FILE_MAX_SIZE:100MB}
     max-history: ${LOG_FILE_MAX_HISTORY:30}
