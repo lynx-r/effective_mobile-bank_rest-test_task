@@ -46,15 +46,18 @@ public class CardholderCardServiceImpl implements CardholderCardService {
     auditService.logCardsListView(sortedPageable.getPageSize(), "findByUserWithFilter");
     log.debug("User requested list of cards with filter. Search: {}, Page size: {}", cleanSearch,
         sortedPageable.getPageSize());
-    return cardRepository.findByUserWithFilter(
-        authenticationFacade.getAuthenticationName(), cleanSearch, sortedPageable).map(CardMapper::mapToResponse);
+    return cardRepository
+        .findByOwner_UsernameAndCardNumberMasked(
+            authenticationFacade.getAuthenticationName(), cleanSearch, sortedPageable)
+        .map(CardMapper::mapToResponse);
   }
 
   @Override
   @Transactional
   public void blockOwnCard(Long cardId) {
-    Card card = cardRepository.findByIdAndOwner_Username(cardId, authenticationFacade
-        .getAuthenticationName())
+    Card card = cardRepository
+        .findByIdAndOwner_Username(cardId, authenticationFacade
+            .getAuthenticationName())
         .orElseThrow(() -> new AccessDeniedException("Карта не найдена или не принадлежит вам"));
 
     if (card.getStatus() == CardStatus.BLOCKED) {

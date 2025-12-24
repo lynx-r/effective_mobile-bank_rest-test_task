@@ -39,7 +39,11 @@ public class AdminCardServiceImpl implements AdminCardService {
   public Page<CardResponse> findCards(String search, Pageable pageable) {
     auditService.logCardsListView(pageable.getPageSize(), "findAll");
     log.debug("Admin requested list of all cards. Page size: {}", pageable.getPageSize());
-    return cardRepository.findByOwnerNameAndCardNumberMasked(search, pageable).map(CardMapper::mapToResponse);
+
+    var searchParam = (search == null || search.isBlank()) ? "" : search;
+    return cardRepository
+        .findByOwnerNameAndCardNumberMasked(searchParam, pageable)
+        .map(CardMapper::mapToResponse);
   }
 
   @Override

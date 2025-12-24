@@ -13,10 +13,11 @@ import com.example.bankrest.entity.Cardholder;
 public interface CardholderRepository extends JpaRepository<Cardholder, Long> {
 
   @Query("SELECT c FROM Cardholder c WHERE " +
+      "(:search = '' OR " +
       "LOWER(c.username) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
       "LOWER(c.email) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
       "LOWER(c.firstName) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
-      "LOWER(c.lastName) LIKE LOWER(CONCAT('%', :search, '%'))")
+      "LOWER(c.lastName) LIKE LOWER(CONCAT('%', :search, '%')))")
   Page<Cardholder> findByUserInfo(@Param("search") String search, Pageable pageable);
 
   Optional<Cardholder> findByEmail(String email);

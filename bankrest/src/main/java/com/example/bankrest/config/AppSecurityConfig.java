@@ -20,6 +20,7 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
+import org.springframework.web.cors.CorsConfiguration;
 
 @EnableMethodSecurity(prePostEnabled = true)
 @EnableWebSecurity
@@ -28,12 +29,22 @@ public class AppSecurityConfig {
 
   @Autowired
   private ClientRegistrationRepository clientRegistrationRepository;
+  @Autowired
+  private CorsProperties corsProperties;
 
   @Bean
   SecurityFilterChain securityFilterChain(HttpSecurity http)
       throws Exception {
 
     http
+        .cors(cors -> cors.configurationSource(request -> {
+          CorsConfiguration config = new CorsConfiguration();
+          config.setAllowedOrigins(corsProperties.getAllowedOrigins());
+          config.setAllowedMethods(corsProperties.getAllowedMethods());
+          config.setAllowedHeaders(List.of("*"));
+          config.setAllowCredentials(corsProperties.isAllowCredentials());
+          return config;
+        }))
         .csrf(csrf -> csrf
             .ignoringRequestMatchers("/api/**"))
         .authorizeHttpRequests(authorize -> authorize

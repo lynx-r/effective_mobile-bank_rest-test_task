@@ -30,7 +30,10 @@ public class AdminCardholderServiceImpl implements AdminCardholderService {
   public Page<CardholderResponse> findCardholders(String search, Pageable pageable) {
     log.debug("Admin requested list of all cardholders. Page size: {}", pageable.getPageSize());
     auditService.logCardholdersListView(null, "findAll");
-    return cardholderRepository.findByUserInfo(search, pageable)
+
+    String searchParam = (search == null || search.isBlank()) ? "" : search;
+    return cardholderRepository
+        .findByUserInfo(searchParam, pageable)
         .map(CardholderMapper::mapToResponse);
   }
 
