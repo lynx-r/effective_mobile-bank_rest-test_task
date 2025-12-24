@@ -59,6 +59,13 @@ public class Card {
   private CardStatus status = CardStatus.ACTIVE;
 
   @Builder.Default
+  @Column(name = "is_block_requested")
+  private Boolean isBlockRequested = false;
+
+  @Column(name = "block_requested_at")
+  private LocalDateTime blockRequestedAt;
+
+  @Builder.Default
   @Column(name = "balance", precision = 15, scale = 2, nullable = false)
   private BigDecimal balance = BigDecimal.ZERO;
 

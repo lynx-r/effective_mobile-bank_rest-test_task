@@ -12,6 +12,8 @@ public class CardMapper {
         card.getCardNumberMasked(),
         card.getStatus(),
         card.getBalance(),
+        card.getIsBlockRequested(),
+        card.getBlockRequestedAt(),
         ownerId);
   }
 }

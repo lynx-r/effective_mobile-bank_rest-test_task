@@ -9,10 +9,10 @@ import com.example.bankcards.config.CryptoConfig;
 
 @SpringBootApplication
 @EnableConfigurationProperties({ CardConfig.class, CryptoConfig.class })
-public class BankRestApplication {
+public class BankCardsApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(BankRestApplication.class, args);
+		SpringApplication.run(BankCardsApplication.class, args);
 	}
 
 }

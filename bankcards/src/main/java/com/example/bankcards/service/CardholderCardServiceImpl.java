@@ -1,6 +1,7 @@
 package com.example.bankcards.service;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -66,7 +67,8 @@ public class CardholderCardServiceImpl implements CardholderCardService {
     }
 
     CardStatus previousStatus = card.getStatus();
-    card.setStatus(CardStatus.BLOCKED);
+    card.setIsBlockRequested(true);
+    card.setBlockRequestedAt(LocalDateTime.now());
     cardRepository.save(card);
 
     // Аудит блокировки карты пользователем

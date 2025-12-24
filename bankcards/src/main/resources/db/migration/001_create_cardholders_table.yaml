@@ -1,7 +1,7 @@
 databaseChangeLog:
   - changeSet:
       id: create-cardholders-table
-      author: bankrest-app
+      author: bankcards-app
       changes:
         - createTable:
             tableName: cardholders

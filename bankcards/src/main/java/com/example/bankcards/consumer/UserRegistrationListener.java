@@ -16,7 +16,7 @@ public class UserRegistrationListener {
 
   private final AdminCardholderService cardholderService;
 
-  @KafkaListener(topics = "user-registration-topic", groupId = "bankrest-group")
+  @KafkaListener(topics = "user-registration-topic", groupId = "bankcards-group")
   public void consume(UserCreatedEvent event) {
     log.info("Received user registration event from Kafka: username={}, email={}",
         event.username(), event.email());

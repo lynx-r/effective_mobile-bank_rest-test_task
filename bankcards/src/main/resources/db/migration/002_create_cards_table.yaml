@@ -1,7 +1,7 @@
 databaseChangeLog:
   - changeSet:
       id: create-cards-table
-      author: bankrest-app
+      author: bankcards-app
       changes:
         - createTable:
             tableName: cards
@@ -45,6 +45,17 @@ databaseChangeLog:
                   constraints:
                     nullable: false
                   defaultValueNumeric: 0.00
+              - column:
+                  name: is_block_requested
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: block_requested_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: true
               - column:
                   name: owner_id
                   type: BIGINT
