@@ -1,6 +1,9 @@
 package com.example.authorizationserver.config;
 
+import java.util.List;
+
 import org.apache.kafka.clients.admin.NewTopic;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -21,6 +24,7 @@ import org.springframework.security.oauth2.server.authorization.token.OAuth2Toke
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
+import org.springframework.web.cors.CorsConfiguration;
 
 import com.example.authorizationserver.utils.Jwks;
 import com.nimbusds.jose.jwk.JWKSet;
@@ -31,21 +35,29 @@ import com.nimbusds.jose.proc.SecurityContext;
 @Configuration
 public class AppSecurityConfig {
 
+  @Autowired
+  private CorsProperties corsProperties;
+
   @Bean
   @Order(1)
   SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http)
       throws Exception {
     http
+        .cors(cors -> cors.configurationSource(request -> {
+          CorsConfiguration config = new CorsConfiguration();
+          config.setAllowedOrigins(corsProperties.getAllowedOrigins());
+          config.setAllowedMethods(corsProperties.getAllowedMethods());
+          config.setAllowedHeaders(List.of("*"));
+          config.setAllowCredentials(corsProperties.isAllowCredentials());
+          return config;
+        }))
         .oauth2AuthorizationServer((authorizationServer) -> {
           http.securityMatcher(authorizationServer.getEndpointsMatcher());
           authorizationServer
               .oidc(oidc -> oidc.logoutEndpoint(Customizer.withDefaults()));
         })
-        // настройте его)
         .authorizeHttpRequests((authorize) -> authorize
             .anyRequest().authenticated())
-        // Redirect to the login page when not authenticated from the
-        // authorization endpoint
         .exceptionHandling((exceptions) -> exceptions
             .defaultAuthenticationEntryPointFor(
                 new LoginUrlAuthenticationEntryPoint("/login"),
@@ -59,9 +71,12 @@ public class AppSecurityConfig {
       throws Exception {
 
     http
-        .csrf(csrf -> csrf.ignoringRequestMatchers("/auth/register")) // Отключаем CSRF только для регистрации
+        .csrf(csrf -> csrf.ignoringRequestMatchers("/auth/register"))
         .authorizeHttpRequests(authorize -> authorize
-            .requestMatchers("/auth/register").permitAll() // Разрешаем доступ всем
+            .requestMatchers("/auth/register").permitAll()
+            .requestMatchers("/swagger-ui/**").permitAll()
+            .requestMatchers("/v3/api-docs").permitAll()
+            .requestMatchers("/openapi.yaml").permitAll()
             .anyRequest().authenticated())
         .formLogin(Customizer.withDefaults());
 

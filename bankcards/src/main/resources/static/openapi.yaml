@@ -44,44 +44,6 @@ components:
       description: JWT токен для аутентификации
 
   schemas:
-    RegisterRequest:
-      type: object
-      required:
-        - username
-        - email
-        - firstName
-        - lastName
-        - password
-      properties:
-        username:
-          type: string
-          minLength: 3
-          maxLength: 50
-          description: Уникальное имя пользователя
-          example: "ivanivanov"
-        email:
-          type: string
-          format: email
-          description: Электронная почта пользователя
-          example: "ivan@example.com"
-        firstName:
-          type: string
-          minLength: 3
-          maxLength: 50
-          description: Имя пользователя
-          example: "Иван"
-        lastName:
-          type: string
-          minLength: 3
-          maxLength: 50
-          description: Фамилия пользователя
-          example: "Иванов"
-        password:
-          type: string
-          minLength: 6
-          description: Пароль пользователя
-          example: "password123"
-
     CreateCardRequest:
       type: object
       required:
@@ -147,20 +109,20 @@ components:
         username:
           type: string
           description: Имя пользователя
-          example: "ivanivanov"
+          example: "user1"
         email:
           type: string
           format: email
           description: Электронная почта
-          example: "ivan@example.com"
+          example: "user1@example.com"
         firstName:
           type: string
           description: Имя пользователя
-          example: "Иван"
+          example: "John"
         lastName:
           type: string
           description: Фамилия пользователя
-          example: "Иванов"
+          example: "Doe"
         enabled:
           type: boolean
           description: Статус активности пользователя
@@ -287,6 +249,18 @@ components:
           type: string
           description: Путь к ресурсу
 
+    TokenResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+          description: JWT токен доступа
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U"
+        refresh_token:
+          type: string
+          description: Токен обновления
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.refresh_token_example"
+
   parameters:
     CardId:
       name: cardId
@@ -346,7 +320,7 @@ components:
       required: false
       schema:
         type: string
-      description: Сортировка (формат: поле,направление)
+      description: "Сортировка (формат: поле,направление)"
       example: "id,desc"
     
     StatusParam:
@@ -358,43 +332,56 @@ components:
         enum: [ACTIVE, BLOCKED, EXPIRED]
       description: Статус карты
 
-paths:
-  /auth/register:
-    post:
-      tags:
-        - Authentication
-      summary: Регистрация пользователя
-      description: Регистрирует нового пользователя в системе
-      operationId: registerUser
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RegisterRequest'
-            example:
-              username: "ivanivanov"
-              email: "ivan@example.com"
-              firstName: "Иван"
-              lastName: "Иванов"
-              password: "password123"
-      responses:
-        '200':
-          description: Пользователь успешно зарегистрирован
-          content:
-            application/json:
-              schema:
-                type: string
-                example: "Пользователь успешно зарегистрирован"
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '409':
-          description: Пользователь с таким username или email уже существует
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+  responses:
+    BadRequest:
+      description: Ошибка валидации входных данных
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            timestamp: "2023-12-01T10:30:00"
+            status: 400
+            error: "Bad Request"
+            message: "Validation failed"
+    
+    Unauthorized:
+      description: Отсутствует или недействительный токен
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            timestamp: "2023-12-01T10:30:00"
+            status: 401
+            error: "Unauthorized"
+            message: "Full authentication is required to access this resource"
+    
+    Forbidden:
+      description: Недостаточно прав доступа
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            timestamp: "2023-12-01T10:30:00"
+            status: 403
+            error: "Forbidden"
+            message: "Access is denied"
+    
+    NotFound:
+      description: Ресурс не найден
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            timestamp: "2023-12-01T10:30:00"
+            status: 404
+            error: "Not Found"
+            message: "Resource not found"
 
+paths:
   /api/cardholder/cards:
     get:
       tags:
@@ -699,55 +686,45 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-components:
-  responses:
-    BadRequest:
-      description: Ошибка валидации входных данных
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorResponse'
-          example:
-            timestamp: "2023-12-01T10:30:00"
-            status: 400
-            error: "Bad Request"
-            message: "Validation failed"
-    
-    Unauthorized:
-      description: Отсутствует или недействительный токен
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorResponse'
-          example:
-            timestamp: "2023-12-01T10:30:00"
-            status: 401
-            error: "Unauthorized"
-            message: "Full authentication is required to access this resource"
-    
-    Forbidden:
-      description: Недостаточно прав доступа
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorResponse'
-          example:
-            timestamp: "2023-12-01T10:30:00"
-            status: 403
-            error: "Forbidden"
-            message: "Access is denied"
-    
-    NotFound:
-      description: Ресурс не найден
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorResponse'
-          example:
-            timestamp: "2023-12-01T10:30:00"
-            status: 404
-            error: "Not Found"
-            message: "Resource not found"
+  /:
+    get:
+      tags:
+        - Home
+      summary: Базовый эндпоинт
+      description: Возвращает приветственное сообщение
+      operationId: home
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "Hello World!"
+
+  /api/token:
+    get:
+      tags:
+        - Token
+      summary: Получение токенов
+      description: Возвращает access_token и refresh_token для авторизованного пользователя
+      operationId: getToken
+      responses:
+        '200':
+          description: Токены успешно получены
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                    description: JWT токен доступа
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  refresh_token:
+                    type: string
+                    description: Токен обновления
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.refresh_token_example"
 
 tags:
   - name: Authentication
@@ -758,3 +735,7 @@ tags:
     description: Административные endpoints для управления картами
   - name: Admin Cardholders
     description: Административные endpoints для управления пользователями
+  - name: Home
+    description: Базовые endpoints для главной страницы
+  - name: Token
+    description: Endpoints для работы с токенами

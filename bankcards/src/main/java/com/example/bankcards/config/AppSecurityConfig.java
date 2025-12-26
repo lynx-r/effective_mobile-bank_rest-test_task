@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -21,6 +22,7 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtGra
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
 import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
 
 @EnableMethodSecurity(prePostEnabled = true)
 @EnableWebSecurity
@@ -33,42 +35,51 @@ public class AppSecurityConfig {
   private CorsProperties corsProperties;
 
   @Bean
-  SecurityFilterChain securityFilterChain(HttpSecurity http)
-      throws Exception {
-
+  @Order(1)
+  public SecurityFilterChain apiSecurityFilterChain(HttpSecurity http) throws Exception {
     http
-        .cors(cors -> cors.configurationSource(request -> {
-          CorsConfiguration config = new CorsConfiguration();
-          config.setAllowedOrigins(corsProperties.getAllowedOrigins());
-          config.setAllowedMethods(corsProperties.getAllowedMethods());
-          config.setAllowedHeaders(List.of("*"));
-          config.setAllowCredentials(corsProperties.isAllowCredentials());
-          return config;
-        }))
-        .csrf(csrf -> csrf
-            .ignoringRequestMatchers("/api/**"))
-        .authorizeHttpRequests(authorize -> authorize
-            .requestMatchers("/public/**").permitAll()
+        .securityMatcher("/api/**")
+        .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+        .csrf(csrf -> csrf.disable())
+        .authorizeHttpRequests(auth -> auth
             .anyRequest().authenticated())
         .oauth2ResourceServer(oauth2 -> oauth2
             .jwt(jwt -> jwt
-                .jwtAuthenticationConverter(jwtAuthenticationConverter())))
-        .oauth2Login(oauth2 -> oauth2
-            .userInfoEndpoint(userInfo -> userInfo
-                .userAuthoritiesMapper(userAuthoritiesMapper()) // ПОДКЛЮЧИТЕ МАППЕР
-            ))
-        .oauth2Client(Customizer.withDefaults())
-        .logout(logout -> logout
-            .logoutSuccessHandler(oidcLogoutSuccessHandler()) // Специальный хендлер
-        );
-
+                .jwtAuthenticationConverter(jwtAuthenticationConverter())));
     return http.build();
   }
 
-  private LogoutSuccessHandler oidcLogoutSuccessHandler() {
-    OidcClientInitiatedLogoutSuccessHandler successHandler = new OidcClientInitiatedLogoutSuccessHandler(
-        clientRegistrationRepository);
+  @Bean
+  @Order(2)
+  public SecurityFilterChain webSecurityFilterChain(HttpSecurity http) throws Exception {
+    http
+        .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+        .csrf(csrf -> csrf.ignoringRequestMatchers("/public/**"))
+        .authorizeHttpRequests(auth -> auth
+            .requestMatchers("/public/**").permitAll()
+            .anyRequest().authenticated())
+        .oauth2Login(oauth2 -> oauth2
+            .userInfoEndpoint(userInfo -> userInfo
+                .userAuthoritiesMapper(userAuthoritiesMapper())))
+        .oauth2Client(Customizer.withDefaults())
+        .logout(logout -> logout
+            .logoutSuccessHandler(oidcLogoutSuccessHandler()));
+    return http.build();
+  }
 
+  private CorsConfigurationSource corsConfigurationSource() {
+    return request -> {
+      CorsConfiguration config = new CorsConfiguration();
+      config.setAllowedOrigins(corsProperties.getAllowedOrigins());
+      config.setAllowedMethods(corsProperties.getAllowedMethods());
+      config.setAllowedHeaders(List.of("*"));
+      config.setAllowCredentials(corsProperties.isAllowCredentials());
+      return config;
+    };
+  }
+
+  private LogoutSuccessHandler oidcLogoutSuccessHandler() {
+    var successHandler = new OidcClientInitiatedLogoutSuccessHandler(clientRegistrationRepository);
     successHandler.setPostLogoutRedirectUri("http://client-app:8080/login?logout");
     return successHandler;
   }
@@ -77,7 +88,7 @@ public class AppSecurityConfig {
   JwtAuthenticationConverter jwtAuthenticationConverter() {
     var rolesConverter = new JwtGrantedAuthoritiesConverter();
     rolesConverter.setAuthoritiesClaimName("roles");
-    rolesConverter.setAuthorityPrefix("");
+    rolesConverter.setAuthorityPrefix("ROLE_");
 
     var converter = new JwtAuthenticationConverter();
     converter.setJwtGrantedAuthoritiesConverter(rolesConverter);

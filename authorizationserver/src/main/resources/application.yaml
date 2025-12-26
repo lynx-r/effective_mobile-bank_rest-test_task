@@ -62,6 +62,32 @@ server:
       cookie:
         name: AUTHORIZATION_SERVER_SESSIONID
 
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui/index.html
+    url: /openapi.yaml
+    enabled: true
+    operations-sorter: method
+    tags-sorter: alpha
+    filter: true
+    tryItOutEnabled: true
+    displayRequestDuration: true
+    docExpansion: none
+    showExtensions: true
+    showCommonExtensions: true
+    defaultModelsExpandDepth: 2
+    defaultModelExpandDepth: 2
+  packages-to-scan: 
+    - com.example.authorizationserver.controller
+
+app:
+  cors:
+    allowed-origins: 
+    allow-credentials: true
+
 logging:
   level:
     "[com.example.authorizationserver]": DEBUG
