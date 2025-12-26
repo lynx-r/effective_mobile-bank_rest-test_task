@@ -47,3 +47,11 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-kafka-test'
 	testImplementation 'org.springframework.boot:spring-boot-starter-liquibase-test'
 }
+
+tasks.named('bootBuildImage') {
+	runImage = 'paketobuildpacks/ubuntu-noble-run:latest'
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}

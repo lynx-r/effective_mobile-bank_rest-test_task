@@ -72,8 +72,8 @@ class AdminCardholderServiceImplTest {
         .id(1L)
         .username("user123")
         .email("ivan@example.com")
-        .firstName("Иван")
-        .lastName("Иванов")
+        .firstName("John")
+        .lastName("Doe")
         .enabled(true)
         .createdAt(LocalDateTime.now())
         .build();
@@ -82,21 +82,21 @@ class AdminCardholderServiceImplTest {
         1L,
         "user123",
         "ivan@example.com",
-        "Иван",
-        "Иванов",
+        "John",
+        "Doe",
         true);
 
     testCardResponse = new CardResponse(
         1L,
-        "Иван Иванов",
-        "1234-****-****-5678",
+        "John Doe",
+        "**** **** **** 1234",
         CardStatus.ACTIVE,
         BigDecimal.valueOf(1000.00),
         false,
         null,
         1L);
 
-    testUserEvent = new UserCreatedEvent("user123", "ivan@example.com", "Иван", "Иванов", LocalDateTime.now());
+    testUserEvent = new UserCreatedEvent("user123", "ivan@example.com", "John", "Doe", LocalDateTime.now());
     pageable = PageRequest.of(0, 10);
   }
 
@@ -113,8 +113,8 @@ class AdminCardholderServiceImplTest {
     // Assert
     assertNotNull(result);
     assertEquals(1, result.getContent().size());
-    assertEquals("Иван", result.getContent().get(0).firstName());
-    assertEquals("Иванов", result.getContent().get(0).lastName());
+    assertEquals("John", result.getContent().get(0).firstName());
+    assertEquals("Doe", result.getContent().get(0).lastName());
 
     verify(cardholderRepository).findByUserInfo("search", pageable);
   }

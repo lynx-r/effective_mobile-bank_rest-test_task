@@ -91,7 +91,7 @@ class TransactionServiceImplTest {
 
     toCard = Card.builder()
         .id(2L)
-        .cardNumberMasked("8765-****-****-4321")
+        .cardNumberMasked("**** **** **** 4321")
         .ownerName("Test User")
         .expiryDate(LocalDate.now().plusYears(3))
         .status(CardStatus.ACTIVE)
@@ -127,7 +127,7 @@ class TransactionServiceImplTest {
     verify(cardRepository).findByIdAndOwner_Username(1L, "testuser");
     verify(cardRepository).findByIdAndOwner_Username(2L, "testuser");
     verify(transactionRepository).save(any(Transaction.class));
-    verify(auditService).logTransfer(eq(1L), eq(2L), eq("**** **** **** 1234"), eq("8765-****-****-4321"), eq("200.00"),
+    verify(auditService).logTransfer(eq(1L), eq(2L), eq("**** **** **** 1234"), eq("**** **** **** 4321"), eq("200.00"),
         eq("RUB"));
 
     // Проверяем, что баланс изменился корректно
@@ -224,7 +224,7 @@ class TransactionServiceImplTest {
     // Arrange
     Card blockedToCard = Card.builder()
         .id(2L)
-        .cardNumberMasked("8765-****-****-4321")
+        .cardNumberMasked("**** **** **** 4321")
         .ownerName("Test User")
         .expiryDate(LocalDate.now().plusYears(3))
         .status(CardStatus.BLOCKED)

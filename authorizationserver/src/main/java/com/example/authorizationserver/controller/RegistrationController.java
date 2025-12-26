@@ -19,7 +19,7 @@ public class RegistrationController {
 
   private final UserService userService;
 
-  @PostMapping("/register")
+  @PostMapping(value = "/register", produces = "text/plain;charset=UTF-8")
   public ResponseEntity<String> register(@Valid @RequestBody RegisterRequest request) {
     userService.register(request);
     return ResponseEntity.ok("Пользователь успешно зарегистрирован");

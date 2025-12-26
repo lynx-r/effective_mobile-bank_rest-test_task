@@ -31,13 +31,6 @@ dependencies {
 	developmentOnly 'org.springframework.boot:spring-boot-docker-compose'
 }
 
-// tasks.named('bootBuildImage') {
-	// runImage = 'paketobuildpacks/ubuntu-noble-run:latest'
-// }
-
-// tasks.named('test') {
-// 	useJUnitPlatform()
-// }
 subprojects {
 	if (project.name == 'common') {
 		bootJar {

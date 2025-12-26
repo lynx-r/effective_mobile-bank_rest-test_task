@@ -67,7 +67,7 @@ components:
         ownerName:
           type: string
           description: ФИО владельца карты
-          example: "Иван Иванов"
+          example: "JOHN DOE"
         cardNumberMasked:
           type: string
           description: Замаскированный номер карты
@@ -289,7 +289,7 @@ components:
       schema:
         type: string
       description: Поисковый запрос
-      example: "иван"
+      example: ""
     
     PageParam:
       name: page
@@ -686,22 +686,6 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /:
-    get:
-      tags:
-        - Home
-      summary: Базовый эндпоинт
-      description: Возвращает приветственное сообщение
-      operationId: home
-      responses:
-        '200':
-          description: Успешный ответ
-          content:
-            application/json:
-              schema:
-                type: string
-                example: "Hello World!"
-
   /api/token:
     get:
       tags:
@@ -727,15 +711,11 @@ paths:
                     example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.refresh_token_example"
 
 tags:
-  - name: Authentication
-    description: Endpoints для аутентификации и регистрации
   - name: Cardholder Cards
     description: Endpoints для работы пользователей со своими картами
   - name: Admin Cards
     description: Административные endpoints для управления картами
   - name: Admin Cardholders
     description: Административные endpoints для управления пользователями
-  - name: Home
-    description: Базовые endpoints для главной страницы
   - name: Token
     description: Endpoints для работы с токенами

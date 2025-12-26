@@ -46,18 +46,18 @@ components:
           minLength: 3
           maxLength: 50
           description: Имя пользователя
-          example: "Иван"
+          example: "John"
         lastName:
           type: string
           minLength: 3
           maxLength: 50
           description: Фамилия пользователя
-          example: "Иванов"
+          example: "Doe"
         password:
           type: string
           minLength: 6
           description: Пароль пользователя
-          example: "password123"
+          example: "password"
 
     ErrorResponse:
       type: object
