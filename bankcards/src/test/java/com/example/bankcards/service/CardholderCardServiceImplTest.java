@@ -173,7 +173,7 @@ class CardholderCardServiceImplTest {
     when(cardRepository.findByIdAndOwner_Username(1L, "testuser")).thenReturn(java.util.Optional.of(activeCard));
 
     // Act
-    assertDoesNotThrow(() -> cardholderCardService.blockOwnCard(1L));
+    assertDoesNotThrow(() -> cardholderCardService.requestBlockCard(1L));
 
     // Assert
     verify(cardRepository).findByIdAndOwner_Username(1L, "testuser");
@@ -193,7 +193,7 @@ class CardholderCardServiceImplTest {
     when(cardRepository.findByIdAndOwner_Username(2L, "testuser")).thenReturn(java.util.Optional.of(blockedCard));
 
     // Act
-    assertDoesNotThrow(() -> cardholderCardService.blockOwnCard(2L));
+    assertDoesNotThrow(() -> cardholderCardService.requestBlockCard(2L));
 
     // Assert
     verify(cardRepository).findByIdAndOwner_Username(2L, "testuser");
@@ -210,7 +210,7 @@ class CardholderCardServiceImplTest {
 
     // Act & Assert
     AccessDeniedException exception = assertThrows(AccessDeniedException.class,
-        () -> cardholderCardService.blockOwnCard(1L));
+        () -> cardholderCardService.requestBlockCard(1L));
 
     assertEquals("Карта не найдена или не принадлежит вам", exception.getMessage());
 

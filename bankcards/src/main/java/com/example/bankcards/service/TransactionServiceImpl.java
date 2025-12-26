@@ -68,8 +68,7 @@ public class TransactionServiceImpl implements TransactionService {
         fromCard.getCardNumberMasked(), toCard.getCardNumberMasked(),
         request.amount().toString(), "RUB");
     log.debug("Transfer completed successfully. User: {}, From Card: {}, To Card: {}, Amount: {}, Transaction ID: {}",
-        authenticationFacade
-            .getAuthenticationName(),
+        authenticationFacade.getAuthenticationName(),
         fromCard.getCardNumberMasked(), toCard.getCardNumberMasked(),
         request.amount(), savedTx.getId());
   }

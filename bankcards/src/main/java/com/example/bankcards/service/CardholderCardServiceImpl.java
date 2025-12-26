@@ -49,16 +49,17 @@ public class CardholderCardServiceImpl implements CardholderCardService {
         sortedPageable.getPageSize());
     return cardRepository
         .findByOwner_UsernameAndCardNumberMasked(
-            authenticationFacade.getAuthenticationName(), cleanSearch, sortedPageable)
+            authenticationFacade.getAuthenticationName(),
+            cleanSearch,
+            sortedPageable)
         .map(CardMapper::mapToResponse);
   }
 
   @Override
   @Transactional
-  public void blockOwnCard(Long cardId) {
+  public void requestBlockCard(Long cardId) {
     Card card = cardRepository
-        .findByIdAndOwner_Username(cardId, authenticationFacade
-            .getAuthenticationName())
+        .findByIdAndOwner_Username(cardId, authenticationFacade.getAuthenticationName())
         .orElseThrow(() -> new AccessDeniedException("Карта не найдена или не принадлежит вам"));
 
     if (card.getStatus() == CardStatus.BLOCKED) {
@@ -79,8 +80,8 @@ public class CardholderCardServiceImpl implements CardholderCardService {
 
   @Override
   public BigDecimal getCardholderCardBalance(Long cardId) {
-    return cardRepository.findByIdAndOwner_Username(cardId, authenticationFacade
-        .getAuthenticationName())
+    return cardRepository
+        .findByIdAndOwner_Username(cardId, authenticationFacade.getAuthenticationName())
         .map((card) -> {
           BigDecimal balance = card.getBalance();
           auditService.logBalanceView(cardId, card.getCardNumberMasked(), card.getBalance());

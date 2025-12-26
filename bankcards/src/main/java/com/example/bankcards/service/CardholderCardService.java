@@ -10,7 +10,7 @@ import com.example.bankcards.dto.CardResponse;
 public interface CardholderCardService {
   Page<CardResponse> findCardholderCards(String search, Pageable pageable);
 
-  void blockOwnCard(Long cardId);
+  void requestBlockCard(Long cardId);
 
   BigDecimal getCardholderCardBalance(Long cardId);
 }

@@ -27,20 +27,20 @@ public class AdminCardholderController {
   private final AdminCardholderService cardholderService;
 
   @GetMapping
-  public ResponseEntity<Page<CardholderResponse>> getAllUsers(
+  public ResponseEntity<Page<CardholderResponse>> getCardholders(
       @RequestParam(required = false) String search,
       @ParameterObject Pageable pageable) {
     return ResponseEntity.ok(cardholderService.findCardholders(search, pageable));
   }
 
   @PutMapping("/{id}/block")
-  public ResponseEntity<Void> blockUser(@PathVariable Long id) {
+  public ResponseEntity<Void> blockCardholder(@PathVariable Long id) {
     cardholderService.blockCardholder(id);
     return ResponseEntity.noContent().build();
   }
 
   @DeleteMapping("/{id}")
-  public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+  public ResponseEntity<Void> deleteCardholder(@PathVariable Long id) {
     cardholderService.deleteCardholder(id);
     return ResponseEntity.noContent().build();
   }

@@ -33,7 +33,7 @@ public class AdminCardController {
   private final AdminCardService cardService;
 
   @GetMapping
-  public ResponseEntity<Page<CardResponse>> getAllCards(
+  public ResponseEntity<Page<CardResponse>> getCards(
       @RequestParam(required = false) String search,
       @ParameterObject Pageable pageable) {
     return ResponseEntity.ok(cardService.findCards(search, pageable));

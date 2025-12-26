@@ -33,23 +33,20 @@ public class CardholderCardController {
   private final CardholderCardService cardService;
   private final TransactionService transactionService;
 
-  // 1. Просмотр своих карт с пагинацией и поиском по маске/номеру
   @GetMapping("/cards")
-  public ResponseEntity<Page<CardResponse>> getMyCards(
+  public ResponseEntity<Page<CardResponse>> getCardholderCards(
 
       @RequestParam(required = false) String search,
       @ParameterObject Pageable pageable) {
     return ResponseEntity.ok(cardService.findCardholderCards(search, pageable));
   }
 
-  // 2. Запрос на блокировку карты
   @PatchMapping("/cards/{cardId}/block")
-  public ResponseEntity<Void> requestBlock(@PathVariable Long cardId) {
-    cardService.blockOwnCard(cardId);
+  public ResponseEntity<Void> requestBlockCard(@PathVariable Long cardId) {
+    cardService.requestBlockCard(cardId);
     return ResponseEntity.noContent().build();
   }
 
-  // 3. Перевод между своими картами
   @PostMapping("/transfer")
   public ResponseEntity<Void> transfer(
       @Valid @RequestBody InternalTransferRequest request) {
@@ -57,9 +54,8 @@ public class CardholderCardController {
     return ResponseEntity.noContent().build();
   }
 
-  // 4. Просмотр баланса конкретной карты
   @GetMapping("/cards/{cardId}/balance")
-  public ResponseEntity<BigDecimal> getBalance(@PathVariable Long cardId) {
+  public ResponseEntity<BigDecimal> getCardholderCardBalance(@PathVariable Long cardId) {
     return ResponseEntity.ok(cardService.getCardholderCardBalance(cardId));
   }
 }
