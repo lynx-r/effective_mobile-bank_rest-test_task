@@ -12,7 +12,6 @@ import com.example.bankcards.entity.Cardholder;
 import com.example.bankcards.repository.CardholderRepository;
 import com.example.common.auth.event.UserCreatedEvent;
 
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -40,6 +39,12 @@ public class AdminCardholderServiceImpl implements AdminCardholderService {
   @Override
   @Transactional
   public void registerCardholder(UserCreatedEvent event) {
+    // Проверяем, не существует ли уже держатель с таким email
+    if (cardholderRepository.findByEmail(event.email()).isPresent()) {
+      log.debug("Cardholder with email {} already exists, skipping registration", event.email());
+      return;
+    }
+
     var cardholder = Cardholder.builder().username(event.username()).email(event.email()).firstName(event.firstName())
         .lastName(event.lastName()).enabled(true)
         .createdAt(event.createdAt()).build();
@@ -55,8 +60,12 @@ public class AdminCardholderServiceImpl implements AdminCardholderService {
   @Override
   @Transactional
   public void blockCardholder(Long id) {
-    Cardholder cardholder = cardholderRepository.findById(id)
-        .orElseThrow(() -> new EntityNotFoundException("Пользователь не найден"));
+    Cardholder cardholder = cardholderRepository.findById(id).orElse(null);
+    if (cardholder == null) {
+      log.debug("Cardholder with ID {} not found, skipping blocking", id);
+      return;
+    }
+
     cardholder.setEnabled(false);
     if (cardholder.getCards() != null && !cardholder.getCards().isEmpty()) {
       cardholder.getCards().forEach(card -> card.setStatus(CardStatus.BLOCKED));
@@ -70,7 +79,8 @@ public class AdminCardholderServiceImpl implements AdminCardholderService {
   @Transactional
   public void deleteCardholder(Long id) {
     if (!cardholderRepository.existsById(id)) {
-      throw new EntityNotFoundException("Пользователь не найден");
+      log.debug("Cardholder with ID {} not found, skipping deletion", id);
+      return;
     }
     auditService.logCardholderDeletion(id);
     log.debug("Card deleted. Cardholder ID: {}", id);

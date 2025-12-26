@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -78,7 +79,7 @@ class CardholderCardServiceImplTest {
 
     activeCard = Card.builder()
         .id(1L)
-        .cardNumberMasked("1234-****-****-5678")
+        .cardNumberMasked("**** **** **** 1234")
         .ownerName("Test User")
         .expiryDate(LocalDate.now().plusYears(3))
         .status(CardStatus.ACTIVE)
@@ -90,7 +91,7 @@ class CardholderCardServiceImplTest {
 
     blockedCard = Card.builder()
         .id(2L)
-        .cardNumberMasked("8765-****-****-4321")
+        .cardNumberMasked("**** **** **** 4321")
         .ownerName("Test User")
         .expiryDate(LocalDate.now().plusYears(2))
         .status(CardStatus.BLOCKED)
@@ -109,7 +110,7 @@ class CardholderCardServiceImplTest {
     // Arrange
     Page<Card> cardPage = new PageImpl<>(java.util.Collections.singletonList(activeCard));
     when(authenticationFacade.getAuthenticationName()).thenReturn("testuser");
-    when(cardRepository.findByOwner_Username("testuser", pageable)).thenReturn(cardPage);
+    when(cardRepository.findByOwner_Username(eq("testuser"), any(Pageable.class))).thenReturn(cardPage);
 
     // Act
     Page<CardResponse> result = cardholderCardService.findCardholderCards(null, pageable);
@@ -117,10 +118,10 @@ class CardholderCardServiceImplTest {
     // Assert
     assertNotNull(result);
     assertEquals(1, result.getContent().size());
-    assertEquals("1234-****-****-5678", result.getContent().get(0).cardNumberMasked());
+    assertEquals("**** **** **** 1234", result.getContent().get(0).cardNumberMasked());
     assertEquals(CardStatus.ACTIVE, result.getContent().get(0).status());
 
-    verify(cardRepository).findByOwner_Username("testuser", pageable);
+    verify(cardRepository).findByOwner_Username(eq("testuser"), any(Pageable.class));
     verify(auditService).logCardsListView(10, "findByOwner_Username");
   }
 
@@ -130,7 +131,8 @@ class CardholderCardServiceImplTest {
     // Arrange
     Page<Card> cardPage = new PageImpl<>(java.util.Collections.singletonList(activeCard));
     when(authenticationFacade.getAuthenticationName()).thenReturn("testuser");
-    when(cardRepository.findByOwner_UsernameAndCardNumberMasked("testuser", "1234", pageable)).thenReturn(cardPage);
+    when(cardRepository.findByOwner_UsernameAndCardNumberMasked(eq("testuser"), eq("1234"), any(Pageable.class)))
+        .thenReturn(cardPage);
 
     // Act
     Page<CardResponse> result = cardholderCardService.findCardholderCards("1234", pageable);
@@ -138,9 +140,9 @@ class CardholderCardServiceImplTest {
     // Assert
     assertNotNull(result);
     assertEquals(1, result.getContent().size());
-    assertEquals("1234-****-****-5678", result.getContent().get(0).cardNumberMasked());
+    assertEquals("**** **** **** 1234", result.getContent().get(0).cardNumberMasked());
 
-    verify(cardRepository).findByOwner_UsernameAndCardNumberMasked("testuser", "1234", pageable);
+    verify(cardRepository).findByOwner_UsernameAndCardNumberMasked(eq("testuser"), eq("1234"), any(Pageable.class));
     verify(auditService).logCardsListView(10, "findByUserWithFilter");
   }
 
@@ -150,7 +152,7 @@ class CardholderCardServiceImplTest {
     // Arrange
     Page<Card> emptyPage = new PageImpl<>(java.util.Collections.emptyList());
     when(authenticationFacade.getAuthenticationName()).thenReturn("testuser");
-    when(cardRepository.findByOwner_Username("testuser", pageable)).thenReturn(emptyPage);
+    when(cardRepository.findByOwner_Username(eq("testuser"), any(Pageable.class))).thenReturn(emptyPage);
 
     // Act
     Page<CardResponse> result = cardholderCardService.findCardholderCards("", pageable);
@@ -160,7 +162,7 @@ class CardholderCardServiceImplTest {
     assertTrue(result.getContent().isEmpty());
     assertEquals(0, result.getTotalElements());
 
-    verify(cardRepository).findByOwner_Username("testuser", pageable);
+    verify(cardRepository).findByOwner_Username(eq("testuser"), any(Pageable.class));
   }
 
   @Test
@@ -176,7 +178,7 @@ class CardholderCardServiceImplTest {
     // Assert
     verify(cardRepository).findByIdAndOwner_Username(1L, "testuser");
     verify(cardRepository).save(activeCard);
-    verify(auditService).logCardBlocking(1L, "1234-****-****-5678");
+    verify(auditService).logCardBlocking(1L, "**** **** **** 1234");
 
     // Проверяем, что карта помечена как заблокированная пользователем
     assertTrue(activeCard.getIsBlockRequested());
@@ -232,7 +234,7 @@ class CardholderCardServiceImplTest {
     assertEquals(new BigDecimal("1000.00"), result);
 
     verify(cardRepository).findByIdAndOwner_Username(1L, "testuser");
-    verify(auditService).logBalanceView(1L, "1234-****-****-5678", new BigDecimal("1000.00"));
+    verify(auditService).logBalanceView(1L, "**** **** **** 1234", new BigDecimal("1000.00"));
   }
 
   @Test
@@ -267,6 +269,6 @@ class CardholderCardServiceImplTest {
     assertEquals(new BigDecimal("500.00"), result);
 
     verify(cardRepository).findByIdAndOwner_Username(2L, "testuser");
-    verify(auditService).logBalanceView(2L, "8765-****-****-4321", new BigDecimal("500.00"));
+    verify(auditService).logBalanceView(2L, "**** **** **** 4321", new BigDecimal("500.00"));
   }
 }

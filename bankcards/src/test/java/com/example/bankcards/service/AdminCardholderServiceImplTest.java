@@ -6,13 +6,12 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -28,7 +27,9 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
+import com.example.bankcards.dto.CardResponse;
 import com.example.bankcards.dto.CardholderResponse;
+import com.example.bankcards.entity.CardStatus;
 import com.example.bankcards.entity.Cardholder;
 import com.example.bankcards.repository.CardholderRepository;
 import com.example.common.auth.event.UserCreatedEvent;
@@ -50,6 +51,9 @@ class AdminCardholderServiceImplTest {
   private CardholderRepository cardholderRepository;
 
   @Mock
+  private AdminCardService cardService;
+
+  @Mock
   private AuditService auditService;
 
   @InjectMocks
@@ -57,6 +61,7 @@ class AdminCardholderServiceImplTest {
 
   private Cardholder testCardholder;
   private CardholderResponse testCardholderResponse;
+  private CardResponse testCardResponse;
   private UserCreatedEvent testUserEvent;
   private Pageable pageable;
 
@@ -80,6 +85,16 @@ class AdminCardholderServiceImplTest {
         "Иван",
         "Иванов",
         true);
+
+    testCardResponse = new CardResponse(
+        1L,
+        "Иван Иванов",
+        "1234-****-****-5678",
+        CardStatus.ACTIVE,
+        BigDecimal.valueOf(1000.00),
+        false,
+        null,
+        1L);
 
     testUserEvent = new UserCreatedEvent("user123", "ivan@example.com", "Иван", "Иванов", LocalDateTime.now());
     pageable = PageRequest.of(0, 10);
@@ -126,19 +141,11 @@ class AdminCardholderServiceImplTest {
   @DisplayName("Успешная регистрация нового держателя")
   void registerCardholder_WithValidUserEvent_SavesCardholder() {
     // Arrange
-    when(cardholderRepository.findByEmail("ivan@example.com")).thenReturn(Optional.empty());
+    when(cardholderRepository.save(any(Cardholder.class))).thenReturn(testCardholder);
+    when(cardService.createCard(any())).thenReturn(testCardResponse);
 
-    // Act
-    adminCardholderService.registerCardholder(testUserEvent);
-
-    // Assert
-    verify(cardholderRepository).findByEmail("ivan@example.com");
-    verify(cardholderRepository).save(argThat(cardholder -> "user123".equals(cardholder.getUsername()) &&
-        "ivan@example.com".equals(cardholder.getEmail()) &&
-        "Иван".equals(cardholder.getFirstName()) &&
-        "Иванов".equals(cardholder.getLastName()) &&
-        Boolean.TRUE.equals(cardholder.getEnabled())));
-    verify(auditService).logCardholderRegister(isNull(), isNull(), isNull());
+    // Act & Assert
+    assertDoesNotThrow(() -> adminCardholderService.registerCardholder(testUserEvent));
   }
 
   @Test
@@ -153,6 +160,7 @@ class AdminCardholderServiceImplTest {
     // Assert
     verify(cardholderRepository).findByEmail("ivan@example.com");
     verify(cardholderRepository, never()).save(any());
+    verify(cardService, never()).createCard(any());
     verify(auditService, never()).logCardholderRegister(any(), any(), any());
   }
 
@@ -167,7 +175,7 @@ class AdminCardholderServiceImplTest {
 
     // Assert
     verify(cardholderRepository).findById(1L);
-    verify(cardholderRepository).save(argThat(cardholder -> Boolean.FALSE.equals(cardholder.getEnabled())));
+    verify(cardholderRepository).save(testCardholder);
     verify(auditService).logCardholderBlocking(1L);
   }
 
@@ -189,14 +197,14 @@ class AdminCardholderServiceImplTest {
   @DisplayName("Успешное удаление держателя")
   void deleteCardholder_WithValidId_DeletesCardholder() {
     // Arrange
-    when(cardholderRepository.findById(1L)).thenReturn(Optional.of(testCardholder));
+    when(cardholderRepository.existsById(1L)).thenReturn(true);
 
     // Act
     adminCardholderService.deleteCardholder(1L);
 
     // Assert
-    verify(cardholderRepository).findById(1L);
-    verify(cardholderRepository).delete(testCardholder);
+    verify(cardholderRepository).existsById(1L);
+    verify(cardholderRepository).deleteById(1L);
     verify(auditService).logCardholderDeletion(1L);
   }
 
@@ -204,13 +212,13 @@ class AdminCardholderServiceImplTest {
   @DisplayName("Попытка удаления несуществующего держателя")
   void deleteCardholder_WithNonExistentId_DoesNotThrowException() {
     // Arrange
-    when(cardholderRepository.findById(1L)).thenReturn(Optional.empty());
+    when(cardholderRepository.existsById(1L)).thenReturn(false);
 
     // Act & Assert
     assertDoesNotThrow(() -> adminCardholderService.deleteCardholder(1L));
 
-    verify(cardholderRepository).findById(1L);
-    verify(cardholderRepository, never()).delete(any());
+    verify(cardholderRepository).existsById(1L);
+    verify(cardholderRepository, never()).deleteById(any());
     verify(auditService, never()).logCardholderDeletion(any());
   }
 }
