@@ -2,13 +2,11 @@ package com.example.authorizationserver.config;
 
 import java.util.List;
 
-import org.apache.kafka.clients.admin.NewTopic;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.MediaType;
-import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.GrantedAuthority;
@@ -130,13 +128,5 @@ public class AppSecurityConfig {
   @Bean
   PasswordEncoder passwordEncoder() {
     return new BCryptPasswordEncoder();
-  }
-
-  @Bean
-  NewTopic userRegistrationTopic() {
-    return TopicBuilder.name("user-registration-topic")
-        .partitions(1)
-        .replicas(1)
-        .build();
   }
 }

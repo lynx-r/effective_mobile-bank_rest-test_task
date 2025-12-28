@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,6 +16,7 @@ import com.example.bankcards.dto.CardResponse;
 import com.example.bankcards.entity.Card;
 import com.example.bankcards.entity.CardStatus;
 import com.example.bankcards.repository.CardRepository;
+import com.example.common.auth.event.RequestBlockCardEvent;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +29,7 @@ public class CardholderCardServiceImpl implements CardholderCardService {
   private final CardRepository cardRepository;
   private final AuditService auditService;
   private final AuthenticationFacade authenticationFacade;
+  private final KafkaTemplate<String, Object> kafkaTemplate;
 
   @Override
   @Transactional(readOnly = true)
@@ -76,6 +79,11 @@ public class CardholderCardServiceImpl implements CardholderCardService {
     auditService.logCardBlocking(card.getId(), card.getCardNumberMasked());
     log.debug("Card blocked by user. Card ID: {}, Masked Number: {}, Previous Status: {}",
         card.getId(), card.getCardNumberMasked(), previousStatus);
+    var event = new RequestBlockCardEvent(
+        cardId,
+        card.getOwner().getId(),
+        LocalDateTime.now());
+    kafkaTemplate.send("block-card-topic", event);
   }
 
   @Override

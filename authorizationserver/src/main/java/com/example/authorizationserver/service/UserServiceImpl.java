@@ -24,9 +24,9 @@ import lombok.extern.slf4j.Slf4j;
 public class UserServiceImpl implements UserService {
 
   private final UserRepository userRepository;
-  private final RoleRepository roleRepository; // Вам понадобится репозиторий для ролей
+  private final RoleRepository roleRepository;
   private final PasswordEncoder passwordEncoder;
-  private final KafkaTemplate<String, Object> kafkaTemplate; // Шаблон для отправки
+  private final KafkaTemplate<String, Object> kafkaTemplate;
 
   @Override
   @Transactional
